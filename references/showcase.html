@@ -711,7 +711,7 @@ SELECT * FROM sessions WHERE token_hash = $1 AND expires_at > NOW();</code></pre
 
     <h2>交互式参数调整</h2>
 
-    <p>以下参数可以实时调整，文档内容会自动更新。调整完毕后点击复制导出配置。</p>
+    <p>以下参数可以实时调整。调整完毕后点击复制导出。</p>
 
     <p-params>
       <p-param name="tokenExpiry" label="Access token 过期时间" type="range" :min="5" :max="60" :step="5" :value="15" unit="分钟"></p-param>
@@ -720,10 +720,6 @@ SELECT * FROM sessions WHERE token_hash = $1 AND expires_at > NOW();</code></pre
       <p-param name="algorithm" label="签名算法" type="select" options="RS256, ES256, HS256" value="RS256"></p-param>
       <p-param name="dualMode" label="双模式过渡期" type="toggle" :value="true"></p-param>
     </p-params>
-
-    <p-callout type="info" icon="💡">
-      <p>当前配置：access token <strong>{{ params.tokenExpiry }}</strong> 分钟过期，refresh token <strong>{{ params.refreshWindow }}</strong> 天滑动窗口，连接池 <strong>{{ params.poolSize }}</strong> 个，签名算法 <strong>{{ params.algorithm }}</strong>，双模式 <strong>{{ params.dualMode ? '开启' : '关闭' }}</strong>。</p>
-    </p-callout>
 
     <p-copy :content="'tokenExpiry=' + params.tokenExpiry + '\nrefreshWindow=' + params.refreshWindow + '\npoolSize=' + params.poolSize + '\nalgorithm=' + params.algorithm + '\ndualMode=' + params.dualMode" label="复制为配置"></p-copy>
 

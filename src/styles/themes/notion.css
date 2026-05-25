@@ -916,7 +916,7 @@ pre:hover .prism-copy-btn {
 /* --- Params ----------------------------------------------- */
 
 .prism-params {
-  background: var(--p-bg-secondary);
+  background: var(--p-surface);
   border: 1px solid var(--p-border);
   border-radius: var(--p-radius-lg);
   padding: var(--p-space-5);
@@ -924,7 +924,7 @@ pre:hover .prism-copy-btn {
 }
 
 .prism-param {
-  gap: var(--p-space-5);
+  gap: var(--p-space-2);
   padding: var(--p-space-3) 0;
   border-bottom: 1px solid var(--p-border);
 }
@@ -938,21 +938,16 @@ pre:hover .prism-copy-btn {
   padding-top: 0;
 }
 
-.prism-param-label {
-  width: 200px;
-  gap: var(--p-space-3);
-}
-
 .prism-param-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--p-text);
+  font-size: 13px;
+  color: var(--p-text-secondary);
 }
 
 .prism-param-value {
   font-size: 13px;
   font-family: var(--p-font-mono);
-  color: var(--p-accent-text);
+  color: var(--p-text);
+  font-weight: 600;
 }
 
 .prism-param-range {
@@ -965,8 +960,8 @@ pre:hover .prism-copy-btn {
 
 .prism-param-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--p-accent);
   cursor: pointer;
@@ -974,7 +969,7 @@ pre:hover .prism-copy-btn {
 
 .prism-param-select {
   padding: var(--p-space-2) var(--p-space-3);
-  font-size: 14px;
+  font-size: 13px;
   font-family: var(--p-font-body);
   border: 1px solid var(--p-border);
   border-radius: 4px;
@@ -983,9 +978,9 @@ pre:hover .prism-copy-btn {
 }
 
 .prism-param-toggle-track {
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
   background: var(--p-border-strong);
   transition: background var(--p-duration-fast) var(--p-ease);
 }
@@ -995,8 +990,8 @@ pre:hover .prism-copy-btn {
 }
 
 .prism-param-toggle-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   left: 2px;
   transform: translateY(-50%);
   background: white;
@@ -1005,7 +1000,7 @@ pre:hover .prism-copy-btn {
 }
 
 .prism-param-toggle.active .prism-param-toggle-thumb {
-  left: 18px;
+  left: 16px;
 }
 
 /* --- Pages ------------------------------------------------ */
