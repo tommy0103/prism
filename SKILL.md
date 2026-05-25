@@ -28,7 +28,7 @@ On first use, read `references/principles.md` for the full design principles. Th
 2. Run the build script to produce a self-contained single-file HTML:
 
 ```bash
-node .od-skills/prism/build.js template.html index.html
+node prism/build.js template.html index.html
 ```
 
 3. The output `index.html` includes the Vue runtime, all components, and all styles inline.

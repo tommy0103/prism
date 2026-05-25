@@ -1,0 +1,4 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prism">
+  <polygon points="120,40 198,180 42,180" fill="none" stroke="#1f2328" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="120" y1="40" x2="120" y2="180" stroke="#1f2328" stroke-width="4" opacity="0.4"/>
+</svg>

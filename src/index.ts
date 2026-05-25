@@ -37,7 +37,7 @@ import PParam from './components/PParam.vue'
 
 import './styles/base.css'
 import './styles/themes/notion.css'
-import 'highlight.js/styles/github.css'
+import './styles/hljs-theme.css'
 import './hljs'
 import { createToc } from './toc'
 
