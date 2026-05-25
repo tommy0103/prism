@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prism — 全组件展示</title>
+  <style>
+    body { margin: 0; }
+    .theme-switch {
+      position: fixed; top: 16px; right: 64px; z-index: 10;
+      display: flex; gap: 4px; background: var(--p-bg-secondary);
+      border-radius: 999px; padding: 3px; border: 1px solid var(--p-border);
+    }
+    .theme-switch button {
+      font-size: 12px; border: none; background: none; padding: 4px 10px;
+      border-radius: 999px; cursor: pointer; color: var(--p-text-secondary);
+      font-family: var(--p-font-body);
+    }
+    .theme-switch button.active {
+      background: var(--p-surface); color: var(--p-text);
+      box-shadow: var(--p-shadow-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-switch">
+    <button onclick="switchTheme('light')" id="t-light">Light</button>
+    <button onclick="switchTheme('auto')" id="t-auto" class="active">Auto</button>
+    <button onclick="switchTheme('dark')" id="t-dark">Dark</button>
+  </div>
+  <script>
+    function switchTheme(t) {
+      PrismUI.setTheme(t);
+      document.querySelectorAll('.theme-switch button').forEach(b => b.classList.remove('active'));
+      document.getElementById('t-' + t).classList.add('active');
+    }
+  </script>
+
+  <div id="app" class="prism">
+
+    <h1>认证系统重构方案</h1>
+    <p class="prism-subtitle">架构决策记录 — 从 session 认证迁移到 JWT + refresh token 方案</p>
+
+    <p-metrics>
+      <p-metric value="47" label="受影响文件"></p-metric>
+      <p-metric value="3" label="破坏性变更"></p-metric>
+      <p-metric value="~4h" label="预估工时"></p-metric>
+    </p-metrics>
+
+    <hr>
+
+    <!-- ───── 核心决策 ───── -->
+
+    <h2>核心决策</h2>
+
+    <p>迁移的核心问题有两个：使用什么 token 格式，以及客户端如何存储 token。第三种方案（保留服务端 session）已评估并排除。</p>
+
+    <p-decision status="approved" verdict="已采纳">
+      <template #title>使用短生命周期 JWT + refresh token 轮换</template>
+      <p>Access token 15 分钟过期；refresh token 单次使用，7 天滑动窗口。在安全性（短暴露窗口）和用户体验（无需频繁登录）之间取得平衡。</p>
+    </p-decision>
+
+    <p-decision status="exploring" verdict="探索中">
+      <template #title>Web 端 token 存储策略</template>
+      <p>倾向于使用 httpOnly cookie — 现有的 CSRF 中间件可以直接复用，避免 in-memory 方案刷新页面丢失状态的问题。</p>
+    </p-decision>
+
+    <p-collapse title="为什么不用 opaque token + session store？" borderless>
+      <p>需要引入 Redis 或等价的 session 存储，增加基础设施复杂度。团队目标是减少有状态依赖，而非增加。<p-badge color="danger">已排除</p-badge></p>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 架构 ───── -->
+
+    <h2>架构</h2>
+
+    <p>认证流程有两条路径：热路径（每个认证请求都走）和冷路径（token 刷新，每个客户端约 15 分钟一次）。</p>
+
+    <h3>热路径 — 请求认证</h3>
+
+    <p-flow>
+      <p-flow-node>客户端</p-flow-node>
+      <p-flow-arrow label="Bearer token"></p-flow-arrow>
+      <p-flow-node color="accent">Auth 中间件</p-flow-node>
+      <p-flow-arrow label="校验"></p-flow-arrow>
+      <p-flow-node color="success">路由处理</p-flow-node>
+    </p-flow>
+
+    <h3>完整请求生命周期</h3>
+
+    <p-flow>
+      <p-flow-node>浏览器</p-flow-node>
+      <p-flow-arrow label="HTTPS request"></p-flow-arrow>
+      <p-flow-node>Nginx 反向代理</p-flow-node>
+      <p-flow-arrow label="X-Forwarded-For"></p-flow-arrow>
+      <p-flow-node color="warning">Rate Limiter</p-flow-node>
+      <p-flow-arrow label="通过限流"></p-flow-arrow>
+      <p-flow-node color="accent">CORS 中间件</p-flow-node>
+      <p-flow-arrow label="preflight OK"></p-flow-arrow>
+      <p-flow-node color="accent">Auth 中间件</p-flow-node>
+      <p-flow-arrow label="JWT payload"></p-flow-arrow>
+      <p-flow-node color="success">路由处理</p-flow-node>
+      <p-flow-arrow label="query"></p-flow-arrow>
+      <p-flow-node color="purple">PostgreSQL</p-flow-node>
+      <p-flow-arrow label="JSON response"></p-flow-arrow>
+      <p-flow-node>浏览器</p-flow-node>
+    </p-flow>
+
+    <p>JWT 校验是 CPU 密集但很快的操作。核心逻辑在 <p-ref to="src-verify" label="auth.ts:42"></p-ref> 中 — 提取 Bearer token、校验签名、返回用户上下文：</p>
+
+    <p-source path="src/middleware/auth.ts:42-48" lang="TypeScript" id="src-verify">
+      <pre><code>export async function verifyAuth(req: Request) {
+  const token = extractBearerToken(req);
+  // token = "eyJhbGciOiJSUzI1NiIs..."
+  if (!token) throw new AuthError('missing_token');
+
+  const payload = await verifyJWT(token);
+  // payload = { sub: "user_8f3a", scopes: ["read", "write"], exp: 1716582400 }
+  return { userId: payload.sub, scopes: payload.scopes };
+}</code></pre>
+      <template #note>单次校验耗时 ~0.3ms，相比当前 session 查询的 2.5ms 是主要的性能提升点。</template>
+    </p-source>
+
+    <p-collapse title="冷路径 — token 刷新流程">
+      <p-flow vertical>
+        <p-flow-node>Access token 过期</p-flow-node>
+        <p-flow-arrow label="检测到 401"></p-flow-arrow>
+        <p-flow-node color="accent">客户端发送 refresh token</p-flow-node>
+        <p-flow-arrow label="POST /api/auth/refresh"></p-flow-arrow>
+        <p-flow-node color="warning">服务端校验 + 轮换</p-flow-node>
+        <p-flow-arrow label="签发新 token 对"></p-flow-arrow>
+        <p-flow-node color="success">返回新的 token 对</p-flow-node>
+      </p-flow>
+
+      <p>轮换逻辑在 <p-ref to="src-rotate" label="refresh.ts:8"></p-ref> 中实现。每个 refresh token 只能使用一次，轮换时旧 token 标记为已消费，签发新的 token 对：</p>
+
+      <p-source path="src/lib/refresh.ts:8-18" lang="TypeScript" id="src-rotate">
+        <pre><code>export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  if (!record) throw new AuthError('invalid_refresh');
+  if (record.consumedAt) {
+    await db.refreshToken.revokeFamily(record.familyId);
+    throw new AuthError('token_reuse_detected');
+  }
+  await db.refreshToken.markConsumed(record.id);
+  return issueTokenPair(record.userId);
+}</code></pre>
+        <template #note>如果一个已消费的 token 再次出现，整个 token 家族将被撤销（可能存在 token 盗用）。</template>
+      </p-source>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 方案权衡 ───── -->
+
+    <h2>方案权衡</h2>
+
+    <p>JWT 方案用基础设施简化换取了一些新的关注点 — 主要是撤销机制和 header 体积。</p>
+
+    <p-compare>
+      <template #pro>
+        <div class="prism-compare-col-title">优势</div>
+        <ul>
+          <li>无状态校验 — 每次请求无需查库</li>
+          <li>水平扩展无需 session 亲和</li>
+          <li>天然支持微服务间 token 传递</li>
+        </ul>
+      </template>
+      <template #con>
+        <div class="prism-compare-col-title">风险</div>
+        <ul>
+          <li>Token 撤销需要维护黑名单</li>
+          <li>请求头变大（~800B vs ~32B）</li>
+          <li>跨服务时钟偏移敏感</li>
+        </ul>
+      </template>
+    </p-compare>
+
+    <p>性能对比 — JWT 校验 vs 现有 session 查询：</p>
+
+    <p-bars>
+      <p-bar label="JWT verify" value="0.3ms" :percent="6" color="success"></p-bar>
+      <p-bar label="Session lookup" value="2.5ms" :percent="50" color="warning"></p-bar>
+      <p-bar label="Refresh rotation" value="4.5ms" :percent="90" color="accent"></p-bar>
+    </p-bars>
+
+    <hr>
+
+    <!-- ───── 已知问题 ───── -->
+
+    <h2>已知问题</h2>
+
+    <p>Review 中发现以下问题，按优先级排序。</p>
+
+    <p-decision status="rejected" verdict="P0">
+      <template #title>并发 refresh 导致合法用户 token 家族被撤销</template>
+      <p>影响所有多 tab 用户。两个 tab 同时刷新 token 时，第二个请求被误判为 token 盗用，导致整个 token 家族（包括第一个 tab 刚拿到的新 token）被撤销。</p>
+    </p-decision>
+
+    <p-collapse title="复现链路">
+      <h4>触发条件</h4>
+      <p>用户在两个浏览器 tab 中同时触发 token 刷新。两个请求携带相同的 refresh token <code>T1 = "dGhpcyBpcyBh..."</code>。</p>
+
+      <h4>Tab A 请求先到达</h4>
+      <p>进入 <p-ref to="bug-rotate-a" label="rotateRefreshToken"></p-ref>，参数 <code>token = "dGhpcyBpcyBh..."</code>：</p>
+
+      <p-source path="src/lib/refresh.ts:8-18" lang="TypeScript" id="bug-rotate-a">
+        <pre><code>export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  // record = { id: 42, familyId: 7, consumedAt: null }
+
+  if (!record) throw new AuthError('invalid_refresh');
+  if (record.consumedAt) {                        // null → 跳过
+    await db.refreshToken.revokeFamily(record.familyId);
+    throw new AuthError('token_reuse_detected');
+  }
+
+  await db.refreshToken.markConsumed(record.id);  // id=42 标记为已消费
+  return issueTokenPair(record.userId);            // → 签发新 token 对 T2
+}</code></pre>
+      </p-source>
+
+      <p>Tab A 正常拿到新 token 对 T2。</p>
+
+      <h4>Tab B 请求随后到达（同一个 T1）</h4>
+      <p>再次进入同一函数，参数仍然是 <code>token = "dGhpcyBpcyBh..."</code>：</p>
+
+      <p-source path="src/lib/refresh.ts:8-18 (第二次调用)" lang="TypeScript" id="bug-rotate-b">
+        <pre><code>export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  // record = { id: 42, familyId: 7, consumedAt: "2025-05-24T10:32:01Z" }
+  //                                              ↑ 已被 Tab A 消费
+
+  if (!record) throw new AuthError('invalid_refresh');
+  if (record.consumedAt) {                        // 不为 null → 进入分支
+    await db.refreshToken.revokeFamily(record.familyId);
+    // familyId=7 的所有 token 被撤销，包括 Tab A 刚拿到的 T2
+    throw new AuthError('token_reuse_detected');   // ← Bug 在这里
+  }
+  // ...不会执行到这里
+}</code></pre>
+        <template #note>根本原因：<code>rotateRefreshToken</code> 无法区分"合法并发"和"token 被盗后重放"，对两者执行了相同的撤销逻辑。修复方向：在 <code>markConsumed</code> 时使用乐观锁（<code>WHERE consumedAt IS NULL</code>），并发时第二个请求直接返回新 token 而不撤销。</template>
+      </p-source>
+
+      <h4>结果</h4>
+      <p-steps>
+        <p-step status="completed" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
+        <p-step status="danger" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
+        <p-step status="danger" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
+      </p-steps>
+    </p-collapse>
+
+    <p-decision status="exploring" verdict="P1">
+      <template #title>Token 黑名单未设置 TTL</template>
+      <p>黑名单在 <p-ref to="src-blocklist" label="blocklist.ts:12"></p-ref> 中实现，但 <code>Set</code> 只增不减，长期运行后内存会持续增长。</p>
+    </p-decision>
+
+    <p-source path="src/lib/blocklist.ts:12-20" lang="TypeScript" id="src-blocklist">
+      <pre><code>const blocklist = new Set&lt;string&gt;();
+
+export function blockToken(jti: string) {
+  blocklist.add(jti);
+  // 没有 TTL，没有过期清理
+  // 运行 30 天后 blocklist.size ≈ 180,000
+}
+
+export function isBlocked(jti: string): boolean {
+  return blocklist.has(jti);
+}</code></pre>
+      <template #note>建议改用 <code>Map&lt;string, number&gt;</code> 存储 <code>jti → expiresAt</code>，定期清理过期条目；或直接用 Redis 的 <code>SETEX</code>。</template>
+    </p-source>
+
+    <p-decision status="pending" verdict="P2">
+      <template #title>刷新端点缺少 rate limiting</template>
+      <p><code>POST /api/auth/refresh</code> 未经过 <p-ref to="src-ratelimit" label="rate-limit.ts"></p-ref> 中间件保护。攻击者可以高频调用消耗数据库资源。</p>
+    </p-decision>
+
+    <p-source path="src/middleware/rate-limit.ts:5-9" lang="TypeScript" id="src-ratelimit">
+      <pre><code>const rateLimitedPaths = [
+  '/api/auth/login',
+  '/api/auth/register',
+  // '/api/auth/refresh' ← 缺失
+];</code></pre>
+    </p-source>
+
+    <hr>
+
+    <!-- ───── API 端点变更 ───── -->
+
+    <h2>API 端点变更</h2>
+
+    <p>本次迁移涉及四个端点的变更。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>端点</th>
+          <th>变更</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>POST /api/auth/login</code></td>
+          <td>返回 JWT 对，不再设置 session cookie</td>
+          <td><p-badge color="warning">破坏性</p-badge></td>
+        </tr>
+        <tr>
+          <td><code>POST /api/auth/refresh</code></td>
+          <td>新增端点，用于 token 轮换</td>
+          <td><p-badge color="success">新增</p-badge></td>
+        </tr>
+        <tr>
+          <td><code>POST /api/auth/logout</code></td>
+          <td>将 token 加入黑名单</td>
+          <td><p-badge color="warning">破坏性</p-badge></td>
+        </tr>
+        <tr>
+          <td><code>GET /api/auth/me</code></td>
+          <td>直接从 JWT payload 读取</td>
+          <td><p-badge color="info">修改</p-badge></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3><p-badge color="accent">POST</p-badge> /api/auth/login</h3>
+    <p class="prism-small prism-muted">验证用户凭证，返回 token 对。</p>
+    <p-collapse title="请求 / 响应详情">
+      <h4>请求体</h4>
+      <p-code file="POST /api/auth/login">
+        <pre><code>{
+  "email": "user@example.com",
+  "password": "••••••••"
+}</code></pre>
+      </p-code>
+      <h4>响应 200</h4>
+      <p-code>
+        <pre><code>{
+  "accessToken": "eyJhbGciOiJSUzI1NiIs...",
+  "refreshToken": "dGhpcyBpcyBhIHJlZnJl...",
+  "expiresIn": 900
+}</code></pre>
+      </p-code>
+      <h4>错误码</h4>
+      <p-kv :items="[
+        { key: '401', value: '凭证无效' },
+        { key: '429', value: '请求过于频繁' }
+      ]"></p-kv>
+      <h4>处理函数</h4>
+      <p-source path="src/routes/auth.ts:24-35" lang="TypeScript" id="src-login">
+        <pre><code>router.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await db.user.findByEmail(email);
+  if (!user || !await bcrypt.compare(password, user.passwordHash)) {
+    throw new AuthError('invalid_credentials', 401);
+  }
+  const { accessToken, refreshToken } = await issueTokenPair(user.id);
+  res.json({ accessToken, refreshToken, expiresIn: 900 });
+});</code></pre>
+      </p-source>
+    </p-collapse>
+
+    <h3><p-badge color="accent">POST</p-badge> /api/auth/refresh</h3>
+    <p class="prism-small prism-muted">使用有效的 refresh token 换取新的 token 对。</p>
+    <p-collapse title="请求 / 响应详情">
+      <h4>请求体</h4>
+      <p-code>
+        <pre><code>{ "refreshToken": "dGhpcyBpcyBhIHJlZnJl..." }</code></pre>
+      </p-code>
+      <h4>响应 200</h4>
+      <p-code>
+        <pre><code>{
+  "accessToken": "eyJhbGciOiJSUzI1NiIs...",
+  "refreshToken": "bmV3IHJlZnJlc2ggdG9r...",
+  "expiresIn": 900
+}</code></pre>
+      </p-code>
+      <h4>错误码</h4>
+      <p-kv :items="[
+        { key: '401', value: 'Refresh token 已过期或已消费' },
+        { key: '403', value: 'Token 家族已撤销（可能存在盗用）' }
+      ]"></p-kv>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 实施计划 ───── -->
+
+    <h2>实施计划</h2>
+
+    <p>共五个步骤，目前进行到第三步。前两步已合并并在 feature flag 后上线。</p>
+
+    <p-steps>
+      <p-step status="completed" title="添加 JWT 签名/校验工具函数" desc="基于 jose 库实现 sign、verify、decode"></p-step>
+      <p-step status="completed" title="创建 refresh token 数据模型 + 迁移"></p-step>
+      <p-step status="active" title="实现认证中间件"></p-step>
+      <p-step title="添加 token 刷新端点"></p-step>
+      <p-step title="更新客户端 SDK"></p-step>
+    </p-steps>
+
+    <p-collapse title="回滚方案">
+      <p>每个步骤的回退操作：</p>
+      <p-steps>
+        <p-step status="warning" title="回滚步骤 1: 删除 jwt.ts" desc="rm src/lib/jwt.ts — 无数据变更，直接删除"></p-step>
+        <p-step status="warning" title="回滚步骤 2: 回退 migration" desc="运行 migration down 删除 refresh_tokens 表。无数据损失（表是新增的）"></p-step>
+        <p-step status="danger" title="回滚步骤 3: 恢复旧 auth 中间件" desc="git revert — 需要同步恢复客户端 SDK，否则客户端会发送 JWT 到不认识它的后端"></p-step>
+      </p-steps>
+      <p-callout type="danger" icon="⚠">
+        <p><strong>不可逆操作：</strong>步骤 2 的 migration 在 30 天后会 drop <code>sessions</code> 表。如果已执行，回滚需要从备份恢复 sessions 数据。</p>
+      </p-callout>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 影响范围 ───── -->
+
+    <h2>影响范围</h2>
+
+    <p>本次迁移涉及 3 个模块、共 9 个文件。</p>
+
+    <p-collapse title="文件变更明细">
+      <p-file-list :groups="[
+        {
+          module: 'src/middleware',
+          files: [
+            { path: 'auth.ts', change: '修改' },
+            { path: 'rate-limit.ts', change: '修改' },
+            { path: 'cors.ts', change: '仅 import' }
+          ]
+        },
+        {
+          module: 'src/lib',
+          files: [
+            { path: 'jwt.ts', change: '新增' },
+            { path: 'refresh.ts', change: '新增' },
+            { path: 'blocklist.ts', change: '新增' }
+          ]
+        },
+        {
+          module: 'src/routes',
+          files: [
+            { path: 'auth.ts', change: '签名变更' },
+            { path: 'index.ts', change: '仅 import' },
+            { path: 'health.ts', change: '仅 import' }
+          ]
+        }
+      ]"></p-file-list>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 相关模块 ───── -->
+
+    <h2>相关模块</h2>
+
+    <p>以下模块与本次迁移有直接依赖关系。</p>
+
+    <p-grid :cols="2">
+      <p-card title="Rate Limiter">
+        <p>必须在 auth 中间件之前执行。当前基于 IP 限流，迁移后可加入基于 <code>userId</code> 的限流。</p>
+        <template #footer>
+          <p-ref to="src-ratelimit" label="rate-limit.ts:5"></p-ref>
+        </template>
+      </p-card>
+      <p-card title="Token 黑名单">
+        <p>用于 logout 和密码变更后的 token 撤销。当前实现为内存 <code>Set</code>，存在内存泄漏风险。</p>
+        <template #footer>
+          <p-ref to="src-blocklist" label="blocklist.ts:12"></p-ref>
+        </template>
+      </p-card>
+    </p-grid>
+
+    <hr>
+
+    <!-- ───── 请求类型分布 ───── -->
+
+    <h2>请求类型分布</h2>
+
+    <p>基于生产环境最近 7 天的数据，各类请求的占比如下：</p>
+
+    <p-stacked-bar
+      :segments="[
+        { percent: 62, color: 'accent' },
+        { percent: 18, color: 'success' },
+        { percent: 12, color: 'warning' },
+        { percent: 8, color: 'muted' }
+      ]"
+      :legend="[
+        { label: '认证 API (62%)', color: 'var(--p-accent)' },
+        { label: '公开 API (18%)', color: 'var(--p-success)' },
+        { label: 'Token 刷新 (12%)', color: 'var(--p-warning)' },
+        { label: '健康检查 (8%)', color: 'var(--p-bg-tertiary)' }
+      ]"
+    ></p-stacked-bar>
+
+    <hr>
+
+    <!-- ───── 技术路线对比 ───── -->
+
+    <h2>技术路线对比</h2>
+
+    <p>除了最终采纳的 JWT 方案外，评估了两个替代方案。以下并列展示三条技术路线的完整评估。</p>
+
+    <p-tabs>
+      <p-tab title="方案 A: JWT（已采纳）">
+        <h4>方案概述</h4>
+        <p>签发短生命周期 JWT access token + 单次使用 refresh token 轮换。校验完全无状态。</p>
+
+        <h4>性能</h4>
+        <p-bars>
+          <p-bar label="校验延迟" value="0.3ms" :percent="4" color="success"></p-bar>
+          <p-bar label="DB 依赖" value="无" :percent="0" color="success"></p-bar>
+        </p-bars>
+
+        <h4>结论</h4>
+        <p-kv :items="[
+          { key: '优势', value: '无状态校验，水平扩展无瓶颈' },
+          { key: '代价', value: 'Token 撤销需要黑名单，header 体积增大' },
+          { key: '判定', value: '采纳 — 最符合团队去状态化目标' }
+        ]"></p-kv>
+      </p-tab>
+
+      <p-tab title="方案 B: Redis Session">
+        <h4>方案概述</h4>
+        <p>签发随机 opaque token，服务端在 Redis 中存储 session 数据。每次请求查 Redis 校验。</p>
+
+        <h4>性能</h4>
+        <p-bars>
+          <p-bar label="校验延迟" value="0.8ms" :percent="10" color="accent"></p-bar>
+          <p-bar label="Redis GET" value="0.8ms" :percent="10" color="accent"></p-bar>
+        </p-bars>
+
+        <p-collapse title="运维成本详细评估">
+          <p-kv :items="[
+            { key: '监控', value: '需要新增 Redis exporter + Grafana dashboard' },
+            { key: '备份', value: 'RDB 快照 + AOF 日志，预估每日 2GB 增量' },
+            { key: 'Failover', value: 'Redis Sentinel 或 Cluster 模式，至少 3 节点' },
+            { key: '月成本', value: '~$150/月（3x r6g.large on AWS）' }
+          ]"></p-kv>
+        </p-collapse>
+
+        <h4>卡点</h4>
+        <p-kv :items="[
+          { key: '约束', value: '团队 OKR 明确要求减少有状态基础设施依赖' },
+          { key: '现状', value: '已有 PostgreSQL + S3，引入 Redis 是第三个有状态组件' },
+          { key: '判定', value: '技术可行但与组织目标冲突 → 否决' }
+        ]"></p-kv>
+      </p-tab>
+
+      <p-tab title="方案 C: DB Session">
+        <h4>方案概述</h4>
+        <p>保持当前架构，session 数据存在 PostgreSQL 的 <code>sessions</code> 表。优化查询性能。</p>
+
+        <h4>性能</h4>
+        <p-bars>
+          <p-bar label="校验延迟" value="2.5ms" :percent="31" color="warning"></p-bar>
+          <p-bar label="DB 查询" value="1/req" :percent="100" color="danger"></p-bar>
+        </p-bars>
+
+        <p-collapse title="索引优化尝试">
+          <p-source path="(EXPLAIN ANALYZE)" lang="SQL" id="src-explain">
+            <pre><code>EXPLAIN ANALYZE
+SELECT * FROM sessions WHERE token_hash = $1 AND expires_at > NOW();</code></pre>
+          </p-source>
+          <p-kv :items="[
+            { key: '加索引前', value: 'Seq Scan, 12.4ms' },
+            { key: '加索引后', value: 'Index Scan, 2.5ms' },
+            { key: '瓶颈', value: '不在索引，在于每次请求一次 DB round trip' }
+          ]"></p-kv>
+        </p-collapse>
+
+        <h4>卡点</h4>
+        <p-kv :items="[
+          { key: '约束', value: '500 万活跃 session，3000 QPS 独占大量 DB 连接' },
+          { key: '扩展', value: '无法水平扩展（session 亲和），垂直扩展成本线性增长' },
+          { key: '判定', value: '性能天花板太低 → 否决' }
+        ]"></p-kv>
+      </p-tab>
+    </p-tabs>
+
+    <hr>
+
+    <!-- ───── 边界条件 ───── -->
+
+    <h2>边界条件</h2>
+
+    <p>主流程之外需要关注的 edge case。已处理的标注了对应的守卫代码，未处理的标红。</p>
+
+    <p-collapse title="边界条件清单">
+      <h4>并发</h4>
+      <p>同一用户多 tab 同时刷新 token — <p-badge color="danger">未处理</p-badge>（见 P0 issue）</p>
+
+      <h4>超时</h4>
+      <p>JWT 校验超时 — 已处理。<p-ref to="src-timeout" label="jwt.ts:22"></p-ref> 中设置了 5 秒超时：</p>
+      <p-source path="src/lib/jwt.ts:22-24" lang="TypeScript" id="src-timeout">
+        <pre><code>const payload = await verifyJWT(token, {
+  maxTokenAge: '15m',
+  clockTolerance: '30s',  // 允许 30 秒时钟偏移
+});</code></pre>
+      </p-source>
+
+      <h4>Token 体积</h4>
+      <p>JWT payload 过大被 nginx 截断 — 已处理。<p-ref to="src-payload" label="jwt.ts:8"></p-ref> 中限制了 payload 字段：</p>
+      <p-source path="src/lib/jwt.ts:8-12" lang="TypeScript" id="src-payload">
+        <pre><code>function buildPayload(user: User) {
+  return {
+    sub: user.id,           // 8 bytes
+    scopes: user.scopes,    // ~20 bytes
+    // 不放 email、name 等大字段，避免 header 超过 nginx 默认 8KB 限制
+  };
+}</code></pre>
+      </p-source>
+
+      <h4>时钟偏移</h4>
+      <p>微服务间时钟不同步导致 token 提前/延迟过期 — 已处理，<code>clockTolerance: '30s'</code>（见上方 jwt.ts:22）。</p>
+
+      <h4>空 Authorization header</h4>
+      <p>请求完全没有 Authorization header — 已处理，<p-ref to="src-verify" label="auth.ts:42"></p-ref> 中 <code>extractBearerToken</code> 返回 <code>null</code> 后抛出 <code>missing_token</code>。</p>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 依赖变更 ───── -->
+
+    <h2>依赖变更</h2>
+
+    <p>本次迁移引入了一个新依赖。</p>
+
+    <p-collapse title="jose@5.2.0 — JWT 签名/校验库">
+      <h4>为什么选 jose 而不是 jsonwebtoken</h4>
+      <p-kv :items="[
+        { key: 'jose', value: 'Web Crypto API 原生支持，ESM，tree-shakeable，13KB gzip' },
+        { key: 'jsonwebtoken', value: 'Node crypto 依赖，CJS only，24KB gzip，不支持 Edge Runtime' }
+      ]"></p-kv>
+
+      <h4>版本选择</h4>
+      <p>锁定 <code>^5.2.0</code>（semver range），5.x 是当前 stable line。</p>
+
+      <h4>package.json 变更</h4>
+      <p-code file="package.json">
+        <pre><code>"dependencies": {
+  "jose": "^5.2.0"
+}</code></pre>
+      </p-code>
+
+      <h4>License</h4>
+      <p>MIT — 与项目兼容，无 copyleft 风险。</p>
+    </p-collapse>
+
+    <hr>
+
+    <!-- ───── 测试覆盖 ───── -->
+
+    <h2>测试覆盖</h2>
+
+    <p>按功能点列出测试状态。未覆盖的关键场景标红。</p>
+
+    <h4>认证流程</h4>
+    <p-checklist>
+      <p-check-item checked>有效凭证登录返回 200 + token 对 — <code>it('returns token pair on valid credentials')</code></p-check-item>
+      <p-check-item checked>无效密码返回 401 — <code>it('rejects invalid password with 401')</code></p-check-item>
+      <p-check-item checked>缺少 Authorization header 返回 401 — <code>it('returns 401 when Authorization header is missing')</code></p-check-item>
+      <p-check-item checked>过期 access token 被拒绝 — <code>it('rejects expired access token')</code></p-check-item>
+      <p-check-item checked>篡改 token 签名被拒绝 — <code>it('rejects token with tampered signature')</code></p-check-item>
+    </p-checklist>
+
+    <h4>Token 刷新</h4>
+    <p-checklist>
+      <p-check-item checked>有效 refresh token 换取新 token 对 — <code>it('rotates refresh token and returns new pair')</code></p-check-item>
+      <p-check-item checked>过期 refresh token 返回 401 — <code>it('rejects expired refresh token')</code></p-check-item>
+      <p-check-item>并发 refresh 不会误撤销 token 家族 <p-badge color="danger">缺失</p-badge></p-check-item>
+      <p-check-item>已消费 token 触发家族撤销 <p-badge color="danger">缺失</p-badge></p-check-item>
+    </p-checklist>
+    <p-collapse title="Token 刷新测试详情">
+      <p-source path="tests/auth/refresh.test.ts:12-28" lang="TypeScript" id="src-test-refresh">
+        <pre><code>describe('POST /api/auth/refresh', () => {
+  it('rotates refresh token and returns new pair', async () => {
+    const { refreshToken } = await loginAs(testUser);
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .send({ refreshToken });
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBeDefined();
+    expect(res.body.refreshToken).not.toBe(refreshToken);
+  });
+
+  it('rejects expired refresh token', async () => {
+    const expiredToken = await createExpiredRefreshToken(testUser);
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .send({ refreshToken: expiredToken });
+    expect(res.status).toBe(401);
+  });
+
+  // TODO: 并发 refresh 测试
+  // TODO: 已消费 token 触发家族撤销
+});</code></pre>
+      </p-source>
+    </p-collapse>
+
+    <h4>黑名单</h4>
+    <p-checklist>
+      <p-check-item checked>Logout 后 token 被加入黑名单 — <code>it('blocks token after logout')</code></p-check-item>
+      <p-check-item>黑名单条目在 token 过期后被清理 <p-badge color="danger">缺失</p-badge></p-check-item>
+    </p-checklist>
+
+    <hr>
+
+    <!-- ───── 交互式参数 ───── -->
+
+    <h2>交互式参数调整</h2>
+
+    <p>以下参数可以实时调整，文档内容会自动更新。调整完毕后点击复制导出配置。</p>
+
+    <p-params>
+      <p-param name="tokenExpiry" label="Access token 过期时间" type="range" :min="5" :max="60" :step="5" :value="15" unit="分钟"></p-param>
+      <p-param name="refreshWindow" label="Refresh token 滑动窗口" type="range" :min="1" :max="30" :step="1" :value="7" unit="天"></p-param>
+      <p-param name="poolSize" label="连接池大小" type="range" :min="10" :max="200" :step="10" :value="100"></p-param>
+      <p-param name="algorithm" label="签名算法" type="select" options="RS256, ES256, HS256" value="RS256"></p-param>
+      <p-param name="dualMode" label="双模式过渡期" type="toggle" :value="true"></p-param>
+    </p-params>
+
+    <p-callout type="info" icon="💡">
+      <p>当前配置：access token <strong>{{ params.tokenExpiry }}</strong> 分钟过期，refresh token <strong>{{ params.refreshWindow }}</strong> 天滑动窗口，连接池 <strong>{{ params.poolSize }}</strong> 个，签名算法 <strong>{{ params.algorithm }}</strong>，双模式 <strong>{{ params.dualMode ? '开启' : '关闭' }}</strong>。</p>
+    </p-callout>
+
+    <p-copy :content="'tokenExpiry=' + params.tokenExpiry + '\nrefreshWindow=' + params.refreshWindow + '\npoolSize=' + params.poolSize + '\nalgorithm=' + params.algorithm + '\ndualMode=' + params.dualMode" label="复制为配置"></p-copy>
+
+    <hr>
+
+    <h2>常见问题</h2>
+
+    <p-collapse title="当前已登录的用户会怎样？" borderless open>
+      <p>所有现有 session 将被失效。用户会看到"会话已过期"的提示，需要重新登录。</p>
+    </p-collapse>
+
+    <p-collapse title="能否灰度发布？" borderless>
+      <p>可以。在 <p-ref to="src-dualmode" label="auth.ts:3"></p-ref> 中设置双模式开关：</p>
+      <p-source path="src/middleware/auth.ts:3-6" lang="TypeScript" id="src-dualmode">
+        <pre><code>// 过渡期双模式：同时接受 session cookie 和 JWT header
+const AUTH_DUAL_MODE = process.env.AUTH_DUAL_MODE === 'true';
+// 建议过渡窗口：2 周
+// 过渡期结束后设为 false 并移除 session 相关代码</code></pre>
+      </p-source>
+    </p-collapse>
+
+    <p-callout type="warning" icon="⚠">
+      <p><strong>部署协调：</strong>移动端团队必须在后端迁移上线前发布客户端更新。Session 失效是不可逆的。</p>
+    </p-callout>
+
+  </div>
+
+  <script src="../dist/prism.iife.js"></script>
+  <script>PrismUI.mount('#app')</script>
+</body>
+</html>

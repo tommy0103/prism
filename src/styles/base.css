@@ -1,0 +1,788 @@
+/* ============================================================
+   Prism — Base (structural)
+   Layout, positioning, grid mechanics, collapse animation
+   ============================================================ */
+
+/* --- Reset & Variables ------------------------------------ */
+
+:root {
+  --p-font-display: 'Georgia', 'Source Serif Pro', 'Iowan Old Style', serif;
+  --p-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  --p-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace;
+
+  --p-bg: #ffffff;
+  --p-bg-secondary: #f7f6f3;
+  --p-bg-tertiary: #f1f1ef;
+  --p-bg-hover: #ebebea;
+  --p-surface: #ffffff;
+  --p-text: #37352f;
+  --p-text-secondary: #787774;
+  --p-text-light: #9b9a97;
+  --p-border: #e9e9e7;
+  --p-border-strong: #d3d3d0;
+  --p-divider: #e9e9e7;
+
+  --p-accent: #2eaadc;
+  --p-accent-text: #0b6e99;
+  --p-accent-bg: #e7f3f8;
+
+  --p-success: #4daa57;
+  --p-success-text: #2b6e32;
+  --p-success-bg: #edf8ee;
+  --p-warning: #cb912d;
+  --p-warning-text: #8c6213;
+  --p-warning-bg: #fbf3db;
+  --p-danger: #e03e3e;
+  --p-danger-text: #982525;
+  --p-danger-bg: #fce4e4;
+  --p-info: #529cca;
+  --p-info-text: #2e6b96;
+  --p-info-bg: #e7f3f8;
+  --p-purple: #9065b0;
+  --p-purple-text: #6940a5;
+  --p-purple-bg: #f3e8fb;
+
+  --p-space-1: 2px;
+  --p-space-2: 4px;
+  --p-space-3: 8px;
+  --p-space-4: 12px;
+  --p-space-5: 16px;
+  --p-space-6: 24px;
+  --p-space-7: 32px;
+  --p-space-8: 48px;
+
+  --p-radius: 6px;
+  --p-radius-lg: 10px;
+
+  --p-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+
+  --p-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --p-duration: 200ms;
+  --p-duration-fast: 140ms;
+}
+
+[data-theme="dark"] {
+  --p-bg: #191919;
+  --p-bg-secondary: #202020;
+  --p-bg-tertiary: #2a2a2a;
+  --p-bg-hover: #333333;
+  --p-surface: #252525;
+  --p-text: #e3e2df;
+  --p-text-secondary: #9b9a97;
+  --p-text-light: #6b6b6b;
+  --p-border: #333333;
+  --p-border-strong: #444444;
+  --p-divider: #333333;
+
+  --p-accent: #58c4e0;
+  --p-accent-text: #8ed5e8;
+  --p-accent-bg: #1a3038;
+  --p-success: #5fc46a;
+  --p-success-text: #8de096;
+  --p-success-bg: #1a2e1c;
+  --p-warning: #dda74e;
+  --p-warning-text: #e8c57a;
+  --p-warning-bg: #2e2614;
+  --p-danger: #e86060;
+  --p-danger-text: #f09090;
+  --p-danger-bg: #2e1a1a;
+  --p-info: #68aed4;
+  --p-info-text: #90c6e4;
+  --p-info-bg: #1a2a36;
+  --p-purple: #b088cc;
+  --p-purple-text: #c8a8e0;
+  --p-purple-bg: #281e36;
+
+  --p-shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --p-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --p-shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --p-bg: #191919;
+    --p-bg-secondary: #202020;
+    --p-bg-tertiary: #2a2a2a;
+    --p-bg-hover: #333333;
+    --p-surface: #252525;
+    --p-text: #e3e2df;
+    --p-text-secondary: #9b9a97;
+    --p-text-light: #6b6b6b;
+    --p-border: #333333;
+    --p-border-strong: #444444;
+    --p-divider: #333333;
+    --p-accent: #58c4e0;
+    --p-accent-text: #8ed5e8;
+    --p-accent-bg: #1a3038;
+    --p-success: #5fc46a;
+    --p-success-text: #8de096;
+    --p-success-bg: #1a2e1c;
+    --p-warning: #dda74e;
+    --p-warning-text: #e8c57a;
+    --p-warning-bg: #2e2614;
+    --p-danger: #e86060;
+    --p-danger-text: #f09090;
+    --p-danger-bg: #2e1a1a;
+    --p-info: #68aed4;
+    --p-info-text: #90c6e4;
+    --p-info-bg: #1a2a36;
+    --p-purple: #b088cc;
+    --p-purple-text: #c8a8e0;
+    --p-purple-bg: #281e36;
+    --p-shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --p-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --p-shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+  }
+}
+
+/* --- Base (`.prism` root) --------------------------------- */
+
+.prism {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.prism *,
+.prism *::before,
+.prism *::after {
+  box-sizing: border-box;
+}
+
+/* --- Card ------------------------------------------------- */
+
+.prism-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.prism-card-footer {
+  display: flex;
+  align-items: center;
+}
+
+/* --- Decision --------------------------------------------- */
+
+.prism-decision {
+  position: relative;
+}
+
+.prism-decision::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+}
+
+.prism-decision-header {
+  display: flex;
+  align-items: center;
+}
+
+.prism-decision-title {
+  flex: 1;
+  margin: 0;
+}
+
+.prism-decision-verdict {
+  white-space: nowrap;
+}
+
+/* --- Callout ---------------------------------------------- */
+
+.prism-callout {
+  display: flex;
+}
+
+.prism-callout-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prism-callout-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Collapse (styled <details>) -------------------------- */
+
+.prism-collapse {
+  overflow: hidden;
+}
+
+.prism-collapse > summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.prism-collapse > summary::-webkit-details-marker { display: none; }
+
+.prism-collapse > summary::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+}
+
+.prism-collapse-body {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.prism-collapse[open] > .prism-collapse-body {
+  grid-template-rows: 1fr;
+}
+
+.prism-collapse-body > .prism-collapse-inner {
+  overflow: hidden;
+}
+
+/* --- Collapse group (accordion) --------------------------- */
+
+.prism-collapse-group {
+  overflow: hidden;
+}
+
+.prism-collapse-group > .prism-collapse {
+  margin: 0;
+}
+
+.prism-collapse-group > .prism-collapse + .prism-collapse {
+  margin-top: 0;
+}
+
+/* --- Badge / Tag ------------------------------------------ */
+
+.prism-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.prism-tag {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Reference Chip (inline anchor) ----------------------- */
+
+.prism-ref {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.prism-ref:hover {
+  text-decoration: none;
+}
+
+/* --- Source Block (expandable reference) ------------------- */
+
+.prism-source {
+  overflow: hidden;
+}
+
+.prism-source > summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.prism-source > summary::-webkit-details-marker { display: none; }
+
+.prism-source > summary::before {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+}
+
+.prism-source > summary .prism-source-path {
+  flex: 1;
+}
+
+.prism-source-body {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.prism-source[open] > .prism-source-body {
+  grid-template-rows: 1fr;
+}
+
+.prism-source-body > .prism-source-inner {
+  overflow: hidden;
+}
+
+.prism-source-body pre {
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* --- Key-Value -------------------------------------------- */
+
+.prism-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.prism-kv dt {
+  white-space: nowrap;
+}
+
+.prism-kv dd {
+  margin: 0;
+}
+
+/* --- Steps / Timeline ------------------------------------- */
+
+.prism-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.prism-steps::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 12px;
+  bottom: 12px;
+  width: 1.5px;
+}
+
+.prism-step {
+  position: relative;
+  padding-left: 36px;
+}
+
+.prism-step::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+}
+
+.prism-step.completed::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 9.5px;
+  width: 4px;
+  height: 7px;
+  transform: rotate(45deg);
+}
+
+.prism-step.danger::after {
+  content: '!';
+  position: absolute;
+  left: 9px;
+  top: 5px;
+}
+
+/* --- Bar Chart -------------------------------------------- */
+
+.prism-bars {
+  display: flex;
+  flex-direction: column;
+}
+
+.prism-bar {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+}
+
+.prism-bar-label {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prism-bar-track {
+  overflow: hidden;
+}
+
+.prism-bar-fill {
+  height: 100%;
+}
+
+.prism-bar-value {
+  min-width: 36px;
+  text-align: right;
+}
+
+/* --- Stacked Bar ------------------------------------------ */
+
+.prism-stacked-track {
+  display: flex;
+  overflow: hidden;
+}
+
+.prism-stacked-segment {
+  height: 100%;
+}
+
+.prism-stacked-legend {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.prism-stacked-legend-item {
+  display: flex;
+  align-items: center;
+}
+
+/* --- Proportion / Metric ---------------------------------- */
+
+.prism-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.prism-metric {
+  text-align: center;
+}
+
+/* --- Table ------------------------------------------------ */
+
+.prism table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prism th {
+  text-align: left;
+}
+
+.prism td {
+  vertical-align: top;
+}
+
+/* --- Code Block ------------------------------------------- */
+
+.prism-code {
+  overflow: hidden;
+}
+
+.prism-code-header {
+  display: flex;
+  align-items: center;
+}
+
+.prism-code pre {
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* --- Flow / Architecture Diagram -------------------------- */
+
+.prism-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.prism-flow-node {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.prism-flow-arrow {
+  flex-shrink: 0;
+  min-width: 32px;
+  height: 1px;
+  position: relative;
+  overflow: visible;
+}
+
+.prism-flow-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  transform: rotate(-45deg);
+}
+
+.prism-flow-label {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.prism-flow.vertical {
+  flex-direction: column;
+  align-items: center;
+}
+
+.prism-flow.vertical .prism-flow-arrow {
+  min-width: 0 !important;
+  width: 1px;
+  height: 28px;
+}
+
+.prism-flow.vertical .prism-flow-label {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  bottom: auto;
+  right: auto;
+  text-align: left;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.prism-flow.vertical .prism-flow-arrow::after {
+  right: -3px;
+  top: auto;
+  bottom: 0;
+  transform: rotate(45deg);
+}
+
+/* --- Grid Layout ------------------------------------------ */
+
+.prism-grid {
+  display: grid;
+}
+
+.prism-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.prism-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.prism-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 600px) {
+  .prism-grid.cols-2,
+  .prism-grid.cols-3,
+  .prism-grid.cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- List ------------------------------------------------- */
+
+.prism-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prism-list li {
+  position: relative;
+}
+
+.prism-list li::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 15px;
+  width: 5px;
+  height: 5px;
+}
+
+.prism-checklist li::before {
+  content: none;
+}
+
+.prism-checklist li::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  width: 14px;
+  height: 14px;
+}
+
+.prism-checklist li.checked::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 14.5px;
+  width: 4px;
+  height: 7px;
+  transform: rotate(45deg);
+}
+
+/* --- Divider with label ----------------------------------- */
+
+.prism-divider {
+  display: flex;
+  align-items: center;
+}
+
+.prism-divider::before,
+.prism-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+}
+
+/* --- Comparison ------------------------------------------- */
+
+.prism-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+  .prism-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prism-compare-col ul {
+  margin: 0;
+}
+
+/* --- Utilities -------------------------------------------- */
+
+.prism-mt-0 { margin-top: 0; }
+.prism-mb-0 { margin-bottom: 0; }
+.prism-mt-4 { margin-top: var(--p-space-5); }
+.prism-mb-4 { margin-bottom: var(--p-space-5); }
+.prism-mt-8 { margin-top: var(--p-space-8); }
+.prism-mb-8 { margin-bottom: var(--p-space-8); }
+
+/* --- Tabs ------------------------------------------------- */
+
+.prism-tabs-header {
+  display: flex;
+  overflow-x: auto;
+}
+
+.prism-tabs-btn {
+  flex-shrink: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* --- Params ----------------------------------------------- */
+
+.prism-param {
+  display: flex;
+  align-items: center;
+}
+
+.prism-param-label {
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.prism-param-range {
+  flex: 1;
+}
+
+.prism-param-toggle {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.prism-param-toggle-track {
+  display: block;
+  position: relative;
+}
+
+.prism-param-toggle-thumb {
+  display: block;
+  position: absolute;
+  top: 50%;
+  border-radius: 50%;
+}
+
+/* --- Pages ------------------------------------------------ */
+
+.prism-pages-bar {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.prism-pages-btn {
+  flex-shrink: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* --- TOC -------------------------------------------------- */
+
+.prism-toc {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+}
+
+.prism-toc-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.prism-toc-open .prism-toc-panel {
+  display: block;
+}
+
+.prism-toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prism-toc a {
+  display: block;
+  text-decoration: none;
+}
+
+/* --- File List -------------------------------------------- */
+
+.prism-file-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.prism-file-group-files {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prism-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prism-gap-0 { gap: 0; }
+.prism-gap-2 { gap: var(--p-space-3); }
+.prism-gap-4 { gap: var(--p-space-5); }

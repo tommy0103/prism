@@ -1,0 +1,1279 @@
+/* ============================================================
+   Prism — Notion Theme
+   Colors, typography, spacing, borders, shadows, transitions
+   ============================================================ */
+
+/* --- Base (`.prism` root) --------------------------------- */
+
+.prism {
+  font-family: var(--p-font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--p-text);
+  background: var(--p-bg);
+  padding: var(--p-space-8) var(--p-space-6);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.prism-full {
+  max-width: none;
+}
+
+/* --- Typography ------------------------------------------- */
+
+.prism h1, .prism h2, .prism h3, .prism h4 {
+  font-family: var(--p-font-display);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--p-text);
+  margin: 0;
+}
+
+.prism h1 {
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--p-space-3);
+}
+
+.prism h2 {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  margin-top: var(--p-space-8);
+  margin-bottom: var(--p-space-5);
+  padding-bottom: var(--p-space-3);
+  border-bottom: 1px solid var(--p-divider);
+}
+
+.prism h3 {
+  font-size: 19px;
+  margin-top: var(--p-space-7);
+  margin-bottom: var(--p-space-4);
+}
+
+.prism h4 {
+  font-size: 16px;
+  font-family: var(--p-font-body);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-secondary);
+  margin-top: var(--p-space-6);
+  margin-bottom: var(--p-space-4);
+}
+
+.prism p {
+  margin: 0 0 var(--p-space-5);
+}
+
+.prism-subtitle {
+  font-size: 18px;
+  color: var(--p-text-secondary);
+  margin-bottom: var(--p-space-7);
+  line-height: 1.5;
+}
+
+.prism-lead {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--p-text);
+}
+
+.prism a {
+  color: var(--p-accent-text);
+  text-decoration: underline;
+  text-decoration-color: var(--p-border);
+  text-underline-offset: 2px;
+  transition: text-decoration-color var(--p-duration-fast) var(--p-ease);
+}
+
+.prism a:hover {
+  text-decoration-color: var(--p-accent-text);
+}
+
+.prism hr {
+  border: none;
+  border-top: 1px solid var(--p-divider);
+  margin: var(--p-space-7) 0;
+}
+
+.prism strong {
+  font-weight: 600;
+}
+
+.prism code {
+  font-family: var(--p-font-mono);
+  font-size: 0.88em;
+  background: var(--p-bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* --- Section ---------------------------------------------- */
+
+.prism-section {
+  margin-bottom: var(--p-space-8);
+}
+
+.prism-section:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Card ------------------------------------------------- */
+
+.prism-card {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  padding: var(--p-space-6);
+  margin-bottom: var(--p-space-5);
+  box-shadow: var(--p-shadow-sm);
+}
+
+.prism-card-header {
+  gap: var(--p-space-4);
+  margin-bottom: var(--p-space-4);
+}
+
+.prism-card-title {
+  font-family: var(--p-font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.prism-card-body {
+  color: var(--p-text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.prism-card-body p:last-child {
+  margin-bottom: 0;
+}
+
+.prism-card-footer {
+  margin-top: var(--p-space-5);
+  padding-top: var(--p-space-4);
+  border-top: 1px solid var(--p-border);
+  gap: var(--p-space-3);
+  font-size: 14px;
+  color: var(--p-text-light);
+}
+
+/* --- Decision --------------------------------------------- */
+
+.prism-decision {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  padding: var(--p-space-6);
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-decision::before {
+  border-radius: 0 2px 2px 0;
+  background: var(--p-accent);
+}
+
+.prism-decision[data-status="approved"]::before { background: var(--p-success); }
+.prism-decision[data-status="rejected"]::before { background: var(--p-danger); }
+.prism-decision[data-status="exploring"]::before { background: var(--p-warning); }
+.prism-decision[data-status="pending"]::before { background: var(--p-text-light); }
+
+.prism-decision-header {
+  gap: var(--p-space-3);
+  margin-bottom: var(--p-space-4);
+}
+
+.prism-decision-title {
+  font-family: var(--p-font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.prism-decision-verdict {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.prism-decision[data-status="approved"] .prism-decision-verdict {
+  color: var(--p-success-text);
+  background: var(--p-success-bg);
+}
+
+.prism-decision[data-status="rejected"] .prism-decision-verdict {
+  color: var(--p-danger-text);
+  background: var(--p-danger-bg);
+}
+
+.prism-decision[data-status="exploring"] .prism-decision-verdict {
+  color: var(--p-warning-text);
+  background: var(--p-warning-bg);
+}
+
+.prism-decision[data-status="pending"] .prism-decision-verdict {
+  color: var(--p-text-secondary);
+  background: var(--p-bg-secondary);
+}
+
+.prism-decision-body {
+  color: var(--p-text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.prism-decision-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Callout ---------------------------------------------- */
+
+.prism-callout {
+  gap: var(--p-space-4);
+  padding: var(--p-space-4) var(--p-space-5);
+  border-radius: var(--p-radius);
+  margin-bottom: var(--p-space-5);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--p-surface);
+  color: var(--p-text);
+  border: 1px solid var(--p-border);
+  border-left: 3px solid var(--p-text-light);
+}
+
+.prism-callout-icon {
+  font-size: 16px;
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+.prism-callout-content p:last-child {
+  margin-bottom: 0;
+}
+
+.prism-callout.info    { border-left-color: var(--p-info); }
+.prism-callout.success { border-left-color: var(--p-success); }
+.prism-callout.warning { border-left-color: var(--p-warning); }
+.prism-callout.danger  { border-left-color: var(--p-danger); }
+.prism-callout.purple  { border-left-color: var(--p-purple); }
+
+/* --- Collapse (styled <details>) -------------------------- */
+
+.prism-collapse {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  margin-bottom: var(--p-space-3);
+}
+
+.prism-collapse + .prism-collapse {
+  margin-top: calc(-1 * var(--p-space-3) + 1px);
+}
+
+.prism-collapse > summary {
+  gap: var(--p-space-3);
+  padding: var(--p-space-4) var(--p-space-5);
+  font-size: 15px;
+  font-weight: 500;
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-collapse > summary:hover {
+  background: var(--p-bg-hover);
+}
+
+.prism-collapse > summary::before {
+  border-right: 1.5px solid var(--p-text-secondary);
+  border-bottom: 1.5px solid var(--p-text-secondary);
+  transform: rotate(-45deg);
+  transition: transform var(--p-duration) var(--p-ease);
+}
+
+.prism-collapse[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.prism-collapse-body {
+  transition: grid-template-rows var(--p-duration) var(--p-ease);
+}
+
+.prism-collapse-body > .prism-collapse-inner {
+  padding: 0 var(--p-space-5) 0;
+}
+
+.prism-collapse[open] > .prism-collapse-body > .prism-collapse-inner {
+  padding-bottom: var(--p-space-5);
+}
+
+.prism-collapse-body .prism-collapse-inner {
+  font-size: 15px;
+  color: var(--p-text-secondary);
+  line-height: 1.6;
+  border-top: 1px solid var(--p-border);
+}
+
+.prism-collapse-inner > :first-child {
+  margin-top: var(--p-space-4);
+}
+
+.prism-collapse-inner > :last-child {
+  margin-bottom: 0;
+}
+
+.prism-collapse.borderless {
+  border: none;
+  border-radius: 0;
+}
+
+.prism-collapse.borderless > summary {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.prism-collapse.borderless > .prism-collapse-body .prism-collapse-inner {
+  padding-left: 0;
+  padding-right: 0;
+  border-top: none;
+}
+
+/* --- Collapse group (accordion) --------------------------- */
+
+.prism-collapse-group {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+}
+
+.prism-collapse-group > .prism-collapse {
+  border: none;
+  border-radius: 0;
+}
+
+.prism-collapse-group > .prism-collapse + .prism-collapse {
+  border-top: 1px solid var(--p-border);
+}
+
+/* --- Badge / Tag ------------------------------------------ */
+
+.prism-badge {
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 1px 8px;
+  border-radius: 999px;
+  line-height: 1.7;
+  background: var(--p-bg-secondary);
+  color: var(--p-text-secondary);
+}
+
+.prism-badge.accent  { background: var(--p-accent-bg); color: var(--p-accent-text); }
+.prism-badge.success { background: var(--p-success-bg); color: var(--p-success-text); }
+.prism-badge.warning { background: var(--p-warning-bg); color: var(--p-warning-text); }
+.prism-badge.danger  { background: var(--p-danger-bg); color: var(--p-danger-text); }
+.prism-badge.info    { background: var(--p-info-bg); color: var(--p-info-text); }
+.prism-badge.purple  { background: var(--p-purple-bg); color: var(--p-purple-text); }
+
+.prism-tag {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--p-bg-secondary);
+  color: var(--p-text-secondary);
+  font-family: var(--p-font-mono);
+  letter-spacing: -0.01em;
+}
+
+/* --- Reference Chip (inline anchor) ----------------------- */
+
+.prism-ref {
+  gap: 4px;
+  font-size: 14px;
+  font-family: var(--p-font-mono);
+  color: var(--p-accent-text);
+  background: var(--p-accent-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-ref:hover {
+  background: var(--p-bg-hover);
+}
+
+.prism-ref::before {
+  content: '\2192';
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* --- Source Block (expandable reference) ------------------- */
+
+.prism-source {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  margin: var(--p-space-3) 0 var(--p-space-5);
+  background: var(--p-bg-secondary);
+}
+
+.prism-source > summary {
+  gap: var(--p-space-3);
+  padding: var(--p-space-3) var(--p-space-4);
+  font-family: var(--p-font-mono);
+  font-size: 13px;
+  color: var(--p-text-secondary);
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-source > summary:hover {
+  background: var(--p-bg-hover);
+}
+
+.prism-source > summary::before {
+  border-right: 1.5px solid var(--p-text-light);
+  border-bottom: 1.5px solid var(--p-text-light);
+  transform: rotate(-45deg);
+  transition: transform var(--p-duration) var(--p-ease);
+}
+
+.prism-source[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.prism-source > summary .prism-source-lang {
+  font-size: 12px;
+  color: var(--p-text-light);
+}
+
+.prism-source-body {
+  transition: grid-template-rows var(--p-duration) var(--p-ease);
+}
+
+.prism-source-body pre {
+  padding: var(--p-space-3) var(--p-space-4);
+  font-family: var(--p-font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--p-text);
+  border-top: 1px solid var(--p-border);
+}
+
+.prism-source-body pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.prism-source-body .prism-source-note {
+  padding: var(--p-space-3) var(--p-space-5);
+  font-size: 14px;
+  color: var(--p-text-secondary);
+  line-height: 1.5;
+  border-top: 1px solid var(--p-border);
+}
+
+/* --- Key-Value -------------------------------------------- */
+
+.prism-kv {
+  gap: var(--p-space-2) var(--p-space-6);
+  font-size: 15px;
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-kv dt {
+  color: var(--p-text-light);
+  font-weight: 500;
+}
+
+.prism-kv dd {
+  color: var(--p-text);
+}
+
+/* --- Steps / Timeline ------------------------------------- */
+
+.prism-steps {
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-steps::before {
+  background: var(--p-border);
+}
+
+.prism-step {
+  padding-bottom: var(--p-space-5);
+}
+
+.prism-step:last-child {
+  padding-bottom: 0;
+}
+
+.prism-step::before {
+  border-radius: 50%;
+  border: 2px solid var(--p-border);
+  background: var(--p-bg);
+}
+
+.prism-step.active::before {
+  border-color: var(--p-accent);
+  background: var(--p-accent);
+  box-shadow: 0 0 0 3px var(--p-accent-bg);
+}
+
+.prism-step.completed::before {
+  border-color: var(--p-success);
+  background: var(--p-success);
+}
+
+.prism-step.completed::after {
+  border: solid var(--p-bg);
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.prism-step.danger::before {
+  border-color: var(--p-danger);
+  background: var(--p-danger);
+}
+
+.prism-step.danger::after {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--p-bg);
+  line-height: 1;
+}
+
+.prism-step.warning::before {
+  border-color: var(--p-warning);
+  background: var(--p-warning);
+}
+
+.prism-step-title {
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.prism-step-desc {
+  font-size: 14px;
+  color: var(--p-text-secondary);
+  margin-top: var(--p-space-1);
+  line-height: 1.5;
+}
+
+/* --- Bar Chart -------------------------------------------- */
+
+.prism-bars {
+  gap: var(--p-space-3);
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-bar {
+  gap: var(--p-space-4);
+  font-size: 14px;
+}
+
+.prism-bar-label {
+  color: var(--p-text-secondary);
+  font-weight: 500;
+}
+
+.prism-bar-track {
+  height: 8px;
+  background: var(--p-bg-secondary);
+  border-radius: 999px;
+}
+
+.prism-bar-fill {
+  border-radius: 999px;
+  background: var(--p-accent);
+  transition: width 600ms var(--p-ease);
+}
+
+.prism-bar-fill.success { background: var(--p-success); }
+.prism-bar-fill.warning { background: var(--p-warning); }
+.prism-bar-fill.danger  { background: var(--p-danger); }
+.prism-bar-fill.purple  { background: var(--p-purple); }
+
+.prism-bar-value {
+  color: var(--p-text-light);
+  font-family: var(--p-font-mono);
+  font-size: 13px;
+}
+
+/* --- Stacked Bar ------------------------------------------ */
+
+.prism-stacked-bar {
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-stacked-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--p-bg-secondary);
+}
+
+.prism-stacked-segment {
+  transition: width 600ms var(--p-ease);
+}
+
+.prism-stacked-segment.accent  { background: var(--p-accent); }
+.prism-stacked-segment.success { background: var(--p-success); }
+.prism-stacked-segment.warning { background: var(--p-warning); }
+.prism-stacked-segment.danger  { background: var(--p-danger); }
+.prism-stacked-segment.purple  { background: var(--p-purple); }
+.prism-stacked-segment.muted   { background: var(--p-bg-tertiary); }
+
+.prism-stacked-legend {
+  gap: var(--p-space-4);
+  margin-top: var(--p-space-3);
+  font-size: 13px;
+  color: var(--p-text-secondary);
+}
+
+.prism-stacked-legend-item {
+  gap: 6px;
+}
+
+.prism-stacked-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* --- Proportion / Metric ---------------------------------- */
+
+.prism-metrics {
+  gap: var(--p-space-5);
+  margin-bottom: var(--p-space-6);
+}
+
+.prism-metric {
+  padding: var(--p-space-5);
+  background: var(--p-bg-secondary);
+  border-radius: var(--p-radius);
+}
+
+.prism-metric-value {
+  font-family: var(--p-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--p-text);
+}
+
+.prism-metric-label {
+  font-size: 13px;
+  color: var(--p-text-light);
+  margin-top: var(--p-space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.prism-metric-delta {
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: var(--p-space-2);
+}
+
+.prism-metric-delta.up   { color: var(--p-success-text); }
+.prism-metric-delta.down { color: var(--p-danger-text); }
+
+/* --- Table ------------------------------------------------ */
+
+.prism table {
+  font-size: 15px;
+  margin-bottom: var(--p-space-5);
+}
+
+.prism th {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-light);
+  padding: var(--p-space-3) var(--p-space-4);
+  border-bottom: 1px solid var(--p-border-strong);
+}
+
+.prism td {
+  padding: var(--p-space-3) var(--p-space-4);
+  border-bottom: 1px solid var(--p-border);
+  color: var(--p-text-secondary);
+}
+
+.prism tr:last-child td {
+  border-bottom: none;
+}
+
+.prism tbody tr:hover {
+  background: var(--p-bg-secondary);
+}
+
+/* --- Code Block ------------------------------------------- */
+
+.prism-code {
+  margin-bottom: var(--p-space-5);
+  border-radius: var(--p-radius);
+  border: 1px solid var(--p-border);
+}
+
+.prism-code-header {
+  gap: var(--p-space-3);
+  padding: var(--p-space-3) var(--p-space-4);
+  background: var(--p-bg-secondary);
+  border-bottom: 1px solid var(--p-border);
+  font-family: var(--p-font-mono);
+  font-size: 13px;
+  color: var(--p-text-secondary);
+}
+
+.prism-code pre {
+  padding: var(--p-space-3) var(--p-space-4);
+  font-family: var(--p-font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--p-bg-secondary);
+  color: var(--p-text);
+}
+
+.prism-code code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* --- Line Numbers ----------------------------------------- */
+
+.prism-line {
+  display: block;
+}
+
+.prism-has-lines .prism-line::before {
+  content: attr(data-line);
+  display: inline-block;
+  width: 3ch;
+  margin-right: var(--p-space-4);
+  text-align: right;
+  color: var(--p-text-light);
+  opacity: 0.5;
+  user-select: none;
+}
+
+.prism-copy-btn {
+  position: absolute;
+  top: var(--p-space-3);
+  right: var(--p-space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--p-text-light);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--p-duration-fast) var(--p-ease), background var(--p-duration-fast) var(--p-ease);
+}
+
+pre:hover .prism-copy-btn {
+  opacity: 1;
+}
+
+.prism-copy-btn:hover {
+  background: var(--p-bg-hover);
+  color: var(--p-text);
+}
+
+/* --- TOC -------------------------------------------------- */
+
+.prism-toc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  background: var(--p-bg);
+  color: var(--p-text-secondary);
+  cursor: pointer;
+  box-shadow: var(--p-shadow);
+  margin-left: auto;
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-toc-toggle:hover {
+  background: var(--p-bg-hover);
+  color: var(--p-text);
+}
+
+.prism-toc-panel {
+  width: 240px;
+  padding: var(--p-space-4);
+  background: var(--p-bg);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  box-shadow: var(--p-shadow-lg);
+}
+
+.prism-toc a {
+  font-size: 13px;
+  color: var(--p-text-secondary);
+  padding: 4px 0;
+  transition: color var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-toc a:hover {
+  color: var(--p-text);
+}
+
+.prism-toc-sub {
+  padding-left: var(--p-space-4);
+}
+
+.prism-toc-sub a {
+  font-size: 12px;
+  color: var(--p-text-light);
+}
+
+/* --- Tabs ------------------------------------------------- */
+
+.prism-tabs {
+  margin-bottom: var(--p-space-5);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  overflow: hidden;
+}
+
+.prism-tabs-header {
+  gap: 0;
+  border-bottom: 1px solid var(--p-border);
+  background: var(--p-bg-secondary);
+}
+
+.prism-tabs-btn {
+  padding: var(--p-space-3) var(--p-space-5);
+  font-size: 14px;
+  font-family: var(--p-font-body);
+  font-weight: 500;
+  color: var(--p-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--p-duration-fast) var(--p-ease), border-color var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-tabs-btn:hover {
+  color: var(--p-text);
+}
+
+.prism-tabs-btn.active {
+  color: var(--p-accent-text);
+  border-bottom-color: var(--p-accent);
+  background: var(--p-bg);
+}
+
+.prism-tabs-body {
+  padding: var(--p-space-5);
+}
+
+.prism-tab-pane > :last-child {
+  margin-bottom: 0;
+}
+
+/* --- Copy Button ------------------------------------------ */
+
+.prism-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--p-space-2) var(--p-space-4);
+  font-size: 13px;
+  font-family: var(--p-font-body);
+  color: var(--p-accent-text);
+  background: var(--p-accent-bg);
+  border: 1px solid var(--p-accent);
+  border-radius: var(--p-radius);
+  cursor: pointer;
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-copy:hover {
+  background: var(--p-bg-hover);
+}
+
+.prism-copy-done {
+  color: var(--p-success-text);
+}
+
+/* --- Params ----------------------------------------------- */
+
+.prism-params {
+  background: var(--p-bg-secondary);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  padding: var(--p-space-5);
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-param {
+  gap: var(--p-space-5);
+  padding: var(--p-space-3) 0;
+  border-bottom: 1px solid var(--p-border);
+}
+
+.prism-param:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.prism-param:first-child {
+  padding-top: 0;
+}
+
+.prism-param-label {
+  width: 200px;
+  gap: var(--p-space-3);
+}
+
+.prism-param-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--p-text);
+}
+
+.prism-param-value {
+  font-size: 13px;
+  font-family: var(--p-font-mono);
+  color: var(--p-accent-text);
+}
+
+.prism-param-range {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--p-border);
+  outline: none;
+}
+
+.prism-param-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--p-accent);
+  cursor: pointer;
+}
+
+.prism-param-select {
+  padding: var(--p-space-2) var(--p-space-3);
+  font-size: 14px;
+  font-family: var(--p-font-body);
+  border: 1px solid var(--p-border);
+  border-radius: 4px;
+  background: var(--p-bg);
+  color: var(--p-text);
+}
+
+.prism-param-toggle-track {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--p-border-strong);
+  transition: background var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-param-toggle.active .prism-param-toggle-track {
+  background: var(--p-accent);
+}
+
+.prism-param-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  transform: translateY(-50%);
+  background: white;
+  transition: left var(--p-duration-fast) var(--p-ease);
+  box-shadow: var(--p-shadow-sm);
+}
+
+.prism-param-toggle.active .prism-param-toggle-thumb {
+  left: 18px;
+}
+
+/* --- Pages ------------------------------------------------ */
+
+.prism-pages-bar {
+  background: none;
+  border-bottom: 1px solid var(--p-border);
+  padding: 0;
+  margin-bottom: var(--p-space-8);
+  gap: var(--p-space-7);
+}
+
+.prism-pages-btn {
+  padding: var(--p-space-4) 0;
+  font-size: 16px;
+  font-family: var(--p-font-body);
+  font-weight: 400;
+  color: var(--p-text-light);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--p-duration-fast) var(--p-ease);
+}
+
+.prism-pages-btn:hover {
+  color: var(--p-text);
+}
+
+.prism-pages-btn.active {
+  color: var(--p-text);
+  font-weight: 600;
+  border-bottom-color: var(--p-text);
+}
+
+/* --- Flow / Architecture Diagram -------------------------- */
+
+.prism-flow {
+  gap: var(--p-space-5) 0;
+  margin-bottom: var(--p-space-5);
+  padding: var(--p-space-6) 0 var(--p-space-4);
+}
+
+.prism-flow-node {
+  padding: var(--p-space-3) var(--p-space-5);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--p-surface);
+}
+
+.prism-flow-node.accent  { border-color: var(--p-accent); background: var(--p-accent-bg); color: var(--p-accent-text); }
+.prism-flow-node.success { border-color: var(--p-success); background: var(--p-success-bg); color: var(--p-success-text); }
+.prism-flow-node.warning { border-color: var(--p-warning); background: var(--p-warning-bg); color: var(--p-warning-text); }
+.prism-flow-node.danger  { border-color: var(--p-danger); background: var(--p-danger-bg); color: var(--p-danger-text); }
+.prism-flow-node.purple  { border-color: var(--p-purple); background: var(--p-purple-bg); color: var(--p-purple-text); }
+
+.prism-flow-arrow {
+  background: var(--p-border-strong);
+}
+
+.prism-flow.vertical .prism-flow-arrow {
+  background: none;
+  border-left: 1px solid var(--p-border-strong);
+}
+
+.prism-flow-arrow::after {
+  border-right: 1.5px solid var(--p-border-strong);
+  border-bottom: 1.5px solid var(--p-border-strong);
+}
+
+.prism-flow-label {
+  font-size: 12px;
+  color: var(--p-text-light);
+  padding: 0 var(--p-space-3);
+}
+
+/* --- Grid Layout ------------------------------------------ */
+
+.prism-grid {
+  gap: var(--p-space-5);
+  margin-bottom: var(--p-space-5);
+}
+
+/* --- List ------------------------------------------------- */
+
+.prism-list {
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-list li {
+  padding: var(--p-space-3) 0 var(--p-space-3) var(--p-space-6);
+  border-bottom: 1px solid var(--p-border);
+  font-size: 15px;
+}
+
+.prism-list li:last-child {
+  border-bottom: none;
+}
+
+.prism-list li::before {
+  border-radius: 50%;
+  background: var(--p-text-light);
+}
+
+.prism-checklist li {
+  padding-left: var(--p-space-7);
+}
+
+.prism-checklist li::after {
+  border: 1.5px solid var(--p-border-strong);
+  border-radius: 3px;
+}
+
+.prism-checklist li.checked::after {
+  background: var(--p-accent);
+  border-color: var(--p-accent);
+}
+
+.prism-checklist li.checked::before {
+  border: solid white;
+  border-width: 0 1.5px 1.5px 0;
+  background: none;
+  border-radius: 0;
+}
+
+/* --- Divider with label ----------------------------------- */
+
+.prism-divider {
+  gap: var(--p-space-4);
+  margin: var(--p-space-7) 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--p-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.prism-divider::before,
+.prism-divider::after {
+  background: var(--p-divider);
+}
+
+/* --- Comparison ------------------------------------------- */
+
+.prism-compare {
+  gap: var(--p-space-5);
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-compare-col {
+  padding: var(--p-space-5);
+  border-radius: var(--p-radius);
+  font-size: 15px;
+}
+
+.prism-compare-col.pro {
+  background: var(--p-success-bg);
+  border: 1px solid color-mix(in srgb, var(--p-success) 20%, transparent);
+}
+
+.prism-compare-col.con {
+  background: var(--p-danger-bg);
+  border: 1px solid color-mix(in srgb, var(--p-danger) 20%, transparent);
+}
+
+.prism-compare-col-title {
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--p-space-3);
+}
+
+.prism-compare-col.pro .prism-compare-col-title { color: var(--p-success-text); }
+.prism-compare-col.con .prism-compare-col-title { color: var(--p-danger-text); }
+
+.prism-compare-col ul {
+  padding-left: var(--p-space-5);
+}
+
+.prism-compare-col li {
+  margin-bottom: var(--p-space-2);
+  line-height: 1.5;
+  color: var(--p-text);
+}
+
+/* --- Text Utilities --------------------------------------- */
+
+.prism-muted { color: var(--p-text-secondary); }
+.prism-light { color: var(--p-text-light); }
+.prism-small { font-size: 14px; }
+.prism-mono  { font-family: var(--p-font-mono); }
+.prism-serif { font-family: var(--p-font-display); }
+
+.prism-text-center { text-align: center; }
+.prism-text-right  { text-align: right; }
+
+/* --- File List -------------------------------------------- */
+
+.prism-file-list {
+  gap: var(--p-space-5);
+  margin-bottom: var(--p-space-5);
+}
+
+.prism-file-group {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  overflow: hidden;
+}
+
+.prism-file-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--p-space-3) var(--p-space-4);
+  background: var(--p-bg-secondary);
+  border-bottom: 1px solid var(--p-border);
+}
+
+.prism-file-group-name {
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--p-font-mono);
+}
+
+.prism-file-group-count {
+  font-size: 13px;
+  color: var(--p-text-light);
+}
+
+.prism-file-item {
+  padding: var(--p-space-2) var(--p-space-4);
+  border-bottom: 1px solid var(--p-border);
+  font-size: 14px;
+  gap: var(--p-space-3);
+  border-left: 3px solid transparent;
+}
+
+.prism-file-item:last-child {
+  border-bottom: none;
+}
+
+.prism-file-path {
+  font-family: var(--p-font-mono);
+  font-size: 13px;
+  color: var(--p-text-secondary);
+}
+
+.prism-file-change {
+  font-size: 12px;
+  color: var(--p-text-light);
+  white-space: nowrap;
+}
+
+.prism-file-added    { border-left-color: var(--p-success); }
+.prism-file-added .prism-file-change { color: var(--p-success-text); }
+
+.prism-file-modified { border-left-color: var(--p-warning); }
+.prism-file-modified .prism-file-change { color: var(--p-warning-text); }
+
+.prism-file-breaking { border-left-color: var(--p-danger); }
+.prism-file-breaking .prism-file-change { color: var(--p-danger-text); }
+
+.prism-file-removed  { border-left-color: var(--p-danger); }
+.prism-file-removed .prism-file-change { color: var(--p-danger-text); }
+.prism-file-removed .prism-file-path { text-decoration: line-through; }
+
+.prism-file-minor    { border-left-color: var(--p-border-strong); }
+.prism-file-minor .prism-file-change { color: var(--p-text-light); }
