@@ -85,6 +85,10 @@ For detailed props, slots, and examples, read the `.md` file next to each compon
 | `<p-grid>` | Responsive column layout | `src/components/PGrid.md` |
 | `<p-file-list>` | File impact map by module | `src/components/PFileList.md` |
 | `<p-checklist>` + `<p-check-item>` | Test coverage checklist | `src/components/PChecklist.md` |
+| `<p-tabs>` + `<p-tab>` | Section-level tab switcher | `src/components/PTabs.md` |
+| `<p-pages>` + `<p-page>` | Document-level multi-page | `src/components/PPages.md` |
+| `<p-copy>` | Copy-to-clipboard button | `src/components/PCopy.md` |
+| `<p-params>` + `<p-param>` | Interactive parameter panel | `src/components/PParams.md` |
 
 ## Theming
 

@@ -10,10 +10,10 @@ Notion-inspired. Dark/light theme. Decision cards, collapsible sections, archite
 
 ```bash
 # Install to current project
-npx skills add your-username/prism
+npx skills add tommy0103/prism
 
 # Or install globally for all projects
-npx skills add your-username/prism --global
+npx skills add tommy0103/prism --global
 ```
 
 No build step needed — the runtime is pre-built and included in the repo.
@@ -23,7 +23,7 @@ After installing, the agent will discover the skill and can use it when you ask 
 ### For developers who want to customize
 
 ```bash
-git clone https://github.com/your-username/prism.git
+git clone https://github.com/tommy0103/prism.git
 cd prism
 npm install
 # Edit src/components/ or src/styles/themes/notion.css
@@ -96,6 +96,8 @@ npx http-server . -p 3000
 | `<p-checklist>` + `<p-check-item>` | Test coverage checklist |
 | `<p-tabs>` + `<p-tab>` | Section-level tab switcher for parallel comparisons |
 | `<p-pages>` + `<p-page>` | Document-level multi-page — full page per tab, single HTML file |
+| `<p-copy>` | Copy-to-clipboard button with customizable content |
+| `<p-params>` + `<p-param>` | Interactive parameter panel — range sliders, selects, toggles |
 
 Each component has its own `.md` doc file in `src/components/` — read the one you need.
 
@@ -169,7 +171,7 @@ prism/
 │   ├── showcase.html              # Every component demonstrated
 │   └── example-vue.html           # Minimal working example
 ├── src/
-│   ├── components/                # 31 Vue SFCs + 18 per-component .md docs
+│   ├── components/                # 34 Vue SFCs + 18 per-component .md docs
 │   ├── styles/
 │   │   ├── base.css               # Structural CSS
 │   │   └── themes/notion.css      # Visual CSS (swappable)
@@ -178,7 +180,7 @@ prism/
 │   └── build-html.ts              # Template → single HTML bundler
 ├── build.js                       # CLI: node build.js template.html output.html
 ├── dist/
-│   └── prism.iife.js              # Built runtime (~303KB, ~102KB gzip)
+│   └── prism.iife.js              # Built runtime (~308KB, ~103KB gzip)
 ├── package.json
 ├── vite.config.ts
 └── README.md
