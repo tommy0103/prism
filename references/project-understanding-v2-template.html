@@ -1,0 +1,142 @@
+<!-- lang: zh-CN -->
+<h1>Prism 当前项目理解 v2</h1>
+<p class="prism-subtitle">基于新版 Prism skill 重新整理：这次把并行观察写成 tracks，而不是 timeline。</p>
+
+<p-decision status="approved" verdict="核心判断">
+  <template #title>Prism 正在从「文档组件库」变成「agent 写作协议」</template>
+  <p>当前项目最重要的变化不是组件数量增加，而是组件开始覆盖 agent 写作里的语义动作：判断、证据、流程、对照、类比、误解纠正、并行观察。它已经不只是更好看的 HTML 输出，而是在约束 agent 如何组织信息。</p>
+</p-decision>
+
+<p>几个当前事实可以作为这份判断的锚点。</p>
+
+<p-metrics>
+  <p-metric value="43" label="Vue SFC"></p-metric>
+  <p-metric value="29" label="组件文档"></p-metric>
+  <p-metric value="341.6 KB" label="IIFE runtime"></p-metric>
+  <p-metric value="108.7 KB" label="gzip runtime"></p-metric>
+</p-metrics>
+
+<hr>
+
+<h2>项目模型</h2>
+
+<p>我现在会把 Prism 理解为三层：agent-facing skill 给出写作规则，Vue 组件词汇表承载语义，构建器把 template 和 runtime 打成可携带 artifact。</p>
+
+<p-flow>
+  <p-flow-node color="accent" subtitle="rules / component choice">SKILL.md</p-flow-node>
+  <p-flow-arrow label="guides"></p-flow-arrow>
+  <p-flow-node color="purple" subtitle="semantic Vue tags">Prism template</p-flow-node>
+  <p-flow-arrow label="mount"></p-flow-arrow>
+  <p-flow-node type="store" subtitle="components + styles inline">IIFE runtime</p-flow-node>
+  <p-flow-arrow label="ships"></p-flow-arrow>
+  <p-flow-node color="success" subtitle="single HTML">Artifact</p-flow-node>
+</p-flow>
+
+<p>这个模型的关键在于：agent 写的不是自由发挥的网页，而是一套有边界的文档语言。视觉是结果，语义才是协议。</p>
+
+<p-collapse title="源码证据">
+  <p-source id="src-index-components" path="src/index.ts:43-45, 95-97" lang="TypeScript">
+    <pre><code>import PTracks from './components/PTracks.vue'
+import PTrack from './components/PTrack.vue'
+import PFinding from './components/PFinding.vue'
+
+const components: Record&lt;string, Component&gt; = {
+  PTracks,
+  PTrack,
+  PFinding,
+}</code></pre>
+    <template #note>新组件已经进入 runtime 注册表，因此不是文档里的构想，而是实际可被 artifact 使用的词汇。</template>
+  </p-source>
+
+  <p-source id="src-skill-budget" path="SKILL.md:43-45" lang="Markdown">
+    <pre><code>- Breathe. Max 2-3 heavy components per viewport.
+- Document-level budget. The total number of heavy components should not exceed the number of h2 sections.
+- Hierarchy first. Verdict visible, evidence collapsed.</code></pre>
+    <template #note>新版 skill 开始限制 agent 对组件的滥用，这会直接提升 artifact 的阅读节奏。</template>
+  </p-source>
+</p-collapse>
+
+<hr>
+
+<h2>并行观察</h2>
+
+<p>这一段是新版组件最适合表达的内容。它不是 step-by-step 进度，而是几条并行评价线：词汇表、写作约束、样式 contract、公开文档。</p>
+
+<p-tracks>
+  <p-track title="语义词汇表" flag="passed">
+    <p-finding title="解释型组件已经成组出现">
+      <code>p-contrast</code>、<code>p-branch</code>、<code>p-term</code>、<code>p-myth</code>、<code>p-analogy</code> 补上了「解释复杂概念」的写作动作。
+    </p-finding>
+    <p-finding title="并行观察终于有了自己的语义">
+      <code>p-tracks</code> 和 <code>p-finding</code> 解决了之前用 <code>p-steps</code> 表达并行增强脉络的问题。
+    </p-finding>
+  </p-track>
+
+  <p-track title="写作约束" flag="passed">
+    <p-finding title="新版 skill 加了文档级预算">
+      重组件数量不应超过 <code>h2</code> section 数量，这会迫使 agent 把弱信号降级为 prose，而不是把所有内容都做成卡片。
+    </p-finding>
+  </p-track>
+
+  <p-track title="样式与构建" flag="passed">
+    <p-finding title="UnoCSS 位置健康">
+      UnoCSS 是内部 authoring layer；对外仍是 <code>.prism-*</code> class 和 <code>--p-*</code> token。这个边界没有破坏 Prism 的文档协议感。
+    </p-finding>
+  </p-track>
+
+  <p-track title="公开文档" flag="polish">
+    <p-finding title="README 仍有历史口径">
+      当前源码是 43 个 Vue SFC、29 个组件文档，但 README 的主叙事仍出现 <code>34 components</code>。
+    </p-finding>
+  </p-track>
+</p-tracks>
+
+<p>这正是 <code>p-tracks</code> 相比 <code>p-steps</code> 的价值：读者不会被误导成「这些事情必须按顺序完成」，而会把它理解成并行维度上的项目状态。</p>
+
+<hr>
+
+<h2>我看到的当前缺口</h2>
+
+<p>剩下的问题大多不是实现问题，而是 context drift：源码、skill、README、showcase 的公开叙事还没有完全同步。</p>
+
+<p-collapse title="需要同步的文件面">
+  <p-file-list :groups="[
+    { module: 'Public narrative', files: [
+      { path: 'README.md', change: '组件数量' },
+      { path: 'README.md', change: '组件家族' },
+      { path: 'README.md', change: 'future directions' }
+    ] },
+    { module: 'Agent context', files: [
+      { path: 'SKILL.md', change: '已更新' },
+      { path: 'references/principles.md', change: '预算规则' }
+    ] },
+    { module: 'Component docs', files: [
+      { path: 'src/components/PTracks.md', change: '新增' },
+      { path: 'src/components/PFinding.md', change: '新增' }
+    ] }
+  ]"></p-file-list>
+</p-collapse>
+
+<p-callout type="warning" icon="!">
+  <p><strong>最值得优先修的是 README 口径。</strong> 技术实现已经走在前面，但 README 首页仍把项目描述成 34 个组件。这会让外部读者误判当前词汇表规模，也会让 agent 学到旧上下文。</p>
+</p-callout>
+
+<hr>
+
+<h2>对新版 skill 的评价</h2>
+
+<p>这次使用新版 skill 的明显变化是：它把「少用组件」写进了规则，并提供了 <code>p-tracks</code> 这种更精确的语义逃生口。之前我会自然拿 <code>p-steps</code> 表达一组观察；现在应该先问这些观察是不是顺序关系。</p>
+
+<p-myth>
+  <template #myth>组件越多，agent 越容易堆组件。</template>
+  <template #truth>只有当 skill 同时提供预算规则和语义边界时，组件增加才会让输出更克制。新版 Prism skill 开始具备这个约束力。</template>
+</p-myth>
+
+<p>我的结论是：Prism 下一步不一定要继续加很多视觉组件，更应该把这些语义边界固化为 context update workflow，让每次组件迭代都自动同步 README、SKILL、showcase 和 principles。</p>
+
+<p-checklist>
+  <p-check-item checked>使用 <code>p-tracks</code> 表达并行观察，而不是复用 <code>p-steps</code>。</p-check-item>
+  <p-check-item checked>把源码证据放进 collapse，避免重组件过多。</p-check-item>
+  <p-check-item>同步 README 的组件数量和家族表。</p-check-item>
+  <p-check-item>把 <code>component-iteration-flow.md</code> 接入 `SKILL.md`，作为组件完成后的 context update workflow。</p-check-item>
+</p-checklist>
