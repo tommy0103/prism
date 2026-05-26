@@ -89,6 +89,11 @@ For detailed props, slots, and examples, read the `.md` file next to each compon
 | `<p-pages>` + `<p-page>` | Document-level multi-page | `src/components/PPages.md` |
 | `<p-copy>` | Copy-to-clipboard button | `src/components/PCopy.md` |
 | `<p-params>` + `<p-param>` | Interactive parameter panel | `src/components/PParams.md` |
+| `<p-contrast>` | Neutral concept comparison (same word, different contexts) | `src/components/PContrast.md` |
+| `<p-branch>` + `<p-branch-item>` | Decision tree / branching flow | `src/components/PBranch.md` |
+| `<p-term>` | Inline term definition (hover tooltip) | `src/components/PTerm.md` |
+| `<p-myth>` | Misconception → correction | `src/components/PMyth.md` |
+| `<p-analogy>` | Analogy mapping (A ≈ B, because C) | `src/components/PAnalogy.md` |
 
 ## Theming
 

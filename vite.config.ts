@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'
 import { resolve } from 'path'
 
 function inlineCssPlugin(): Plugin {
@@ -37,6 +38,7 @@ function inlineCssPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
+    UnoCSS(),
     vue(),
     inlineCssPlugin(),
   ],

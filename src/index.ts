@@ -34,7 +34,14 @@ import PPage from './components/PPage.vue'
 import PCopy from './components/PCopy.vue'
 import PParams from './components/PParams.vue'
 import PParam from './components/PParam.vue'
+import PContrast from './components/PContrast.vue'
+import PBranch from './components/PBranch.vue'
+import PBranchItem from './components/PBranchItem.vue'
+import PTerm from './components/PTerm.vue'
+import PMyth from './components/PMyth.vue'
+import PAnalogy from './components/PAnalogy.vue'
 
+import 'virtual:uno.css'
 import './styles/base.css'
 import './styles/themes/notion.css'
 import './styles/hljs-theme.css'
@@ -76,6 +83,12 @@ const components: Record<string, Component> = {
   PCopy,
   PParams,
   PParam,
+  PContrast,
+  PBranch,
+  PBranchItem,
+  PTerm,
+  PMyth,
+  PAnalogy,
 }
 
 function mount(el: string | HTMLElement): App {

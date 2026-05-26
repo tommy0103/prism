@@ -81,9 +81,9 @@
 
     <p-flow>
       <p-flow-node>客户端</p-flow-node>
-      <p-flow-arrow label="Bearer token"></p-flow-arrow>
-      <p-flow-node color="accent">Auth 中间件</p-flow-node>
-      <p-flow-arrow label="校验"></p-flow-arrow>
+      <p-flow-arrow label="Bearer"></p-flow-arrow>
+      <p-flow-node color="accent" meta="0.3ms">Auth 中间件</p-flow-node>
+      <p-flow-arrow label="ok"></p-flow-arrow>
       <p-flow-node color="success">路由处理</p-flow-node>
     </p-flow>
 
@@ -91,19 +91,19 @@
 
     <p-flow>
       <p-flow-node>浏览器</p-flow-node>
-      <p-flow-arrow label="HTTPS request"></p-flow-arrow>
-      <p-flow-node>Nginx 反向代理</p-flow-node>
-      <p-flow-arrow label="X-Forwarded-For"></p-flow-arrow>
-      <p-flow-node color="warning">Rate Limiter</p-flow-node>
-      <p-flow-arrow label="通过限流"></p-flow-arrow>
-      <p-flow-node color="accent">CORS 中间件</p-flow-node>
-      <p-flow-arrow label="preflight OK"></p-flow-arrow>
-      <p-flow-node color="accent">Auth 中间件</p-flow-node>
-      <p-flow-arrow label="JWT payload"></p-flow-arrow>
-      <p-flow-node color="success">路由处理</p-flow-node>
+      <p-flow-arrow label="HTTPS"></p-flow-arrow>
+      <p-flow-node type="external">Nginx</p-flow-node>
+      <p-flow-arrow label="proxy"></p-flow-arrow>
+      <p-flow-node color="warning" meta="3000/s">Rate Limiter</p-flow-node>
+      <p-flow-arrow label="pass"></p-flow-arrow>
+      <p-flow-node color="accent">CORS</p-flow-node>
+      <p-flow-arrow label="ok"></p-flow-arrow>
+      <p-flow-node color="accent" meta="0.3ms">Auth</p-flow-node>
+      <p-flow-arrow label="JWT"></p-flow-arrow>
+      <p-flow-node color="success" subtitle="POST /api/auth/login">路由处理</p-flow-node>
       <p-flow-arrow label="query"></p-flow-arrow>
-      <p-flow-node color="purple">PostgreSQL</p-flow-node>
-      <p-flow-arrow label="JSON response"></p-flow-arrow>
+      <p-flow-node type="store" color="purple">PostgreSQL</p-flow-node>
+      <p-flow-arrow label="JSON"></p-flow-arrow>
       <p-flow-node>浏览器</p-flow-node>
     </p-flow>
 
@@ -725,7 +725,80 @@ SELECT * FROM sessions WHERE token_hash = $1 AND expires_at > NOW();</code></pre
 
     <hr>
 
-    <h2>常见问题</h2>
+    <!-- ───── 术语定义 ───── -->
+
+    <h2>术语内联定义</h2>
+
+    <p>鼠标悬停查看术语解释。首次出现的术语带 · 圆点标记。</p>
+
+    <p>认证系统使用 <p-term word="JWT" def="JSON Web Token。一种自包含的 token 格式，payload 里携带用户信息和过期时间，服务端无需查库即可校验。" first>JWT</p-term> 作为 access token。每次请求在 <p-term word="Authorization header" def="HTTP 请求头，格式为 Bearer &lt;token&gt;，用于传递认证凭证。" first>Authorization header</p-term> 中携带 token，<p-term word="Auth 中间件" def="请求处理链中负责校验 token 签名和过期时间的组件，位于 CORS 之后、路由处理之前。">Auth 中间件</p-term>提取并校验后将用户上下文注入到后续处理中。</p>
+
+    <hr>
+
+    <!-- ───── 概念对照 ───── -->
+
+    <h2>概念对照</h2>
+
+    <p>同一个词在不同语境下的不同含义 — 不是优劣对比，而是中性的语义差异。</p>
+
+    <p-contrast word="session" desc="在两个语境下含义不同">
+      <template #left>
+        <div class="context">在旧架构里</div>
+        <div class="meaning">服务端存储的状态对象，包含用户 ID、权限、过期时间。存在 Redis 或数据库中，每次请求查询。强调<em>服务端状态</em>。</div>
+      </template>
+      <template #right>
+        <div class="context">在 JWT 架构里</div>
+        <div class="meaning">客户端持有的 token 对（access + refresh）。服务端不存储任何状态，校验仅依赖签名。强调<em>无状态</em>。</div>
+      </template>
+    </p-contrast>
+
+    <hr>
+
+    <!-- ───── 类比映射 ───── -->
+
+    <h2>类比映射</h2>
+
+    <p>用已知概念解释新概念。</p>
+
+    <p-analogy
+      source="门禁卡"
+      source-desc="刷卡进门，卡上印着你的名字和有效期。门禁系统不联网验证 — 只看卡上的签名是否合法、是否过期。"
+      target="JWT Token"
+      target-desc="请求附带 token，Auth 中间件不查数据库 — 只验证签名是否合法、是否过期。用户信息直接从 token payload 读取。"
+      because="两者都把身份信息嵌入凭证本身，验证方不需要查询中央数据库。"
+    ></p-analogy>
+
+    <hr>
+
+    <!-- ───── 分支流程 ───── -->
+
+    <h2>分支流程</h2>
+
+    <p>Token 校验的决策树 — 不同条件走不同处理路径。</p>
+
+    <p-branch root="Auth 中间件收到请求，检查 Authorization header">
+      <p-branch-item cond="无 header" status="danger" outcome="返回 401 Missing Token">请求没有 Authorization header</p-branch-item>
+      <p-branch-item cond="有 header" outcome="提取 Bearer token，进入签名校验">Authorization: Bearer eyJ...
+        <template #children>
+          <p-branch-item cond="签名无效" status="danger" outcome="返回 401 Invalid Token">token 被篡改或使用了错误的密钥</p-branch-item>
+          <p-branch-item cond="已过期" status="danger" outcome="返回 401 Token Expired，客户端需 refresh">exp 早于当前时间</p-branch-item>
+          <p-branch-item cond="签名有效" status="success" outcome="注入 userId + scopes 到请求上下文，继续处理">校验通过</p-branch-item>
+        </template>
+      </p-branch-item>
+    </p-branch>
+
+    <hr>
+
+    <!-- ───── 误解澄清 ───── -->
+
+    <h2>误解澄清</h2>
+
+    <p-myth>
+      <template #myth>JWT 不需要数据库，所以 logout 只要客户端删掉 token 就行了？</template>
+      <template #truth>客户端删除 token 只是让<strong>这个客户端</strong>不再发送它。如果 token 已经泄露，攻击者仍然可以用它直到过期。真正的 logout 需要服务端维护一个 token 黑名单（blocklist），在校验时额外检查 token 是否被撤销。</template>
+    </p-myth>
+
+    <hr>
 
     <p-collapse title="当前已登录的用户会怎样？" borderless open>
       <p>所有现有 session 将被失效。用户会看到"会话已过期"的提示，需要重新登录。</p>
