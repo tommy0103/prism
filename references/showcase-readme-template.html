@@ -291,48 +291,30 @@ npm run dev     # Watch mode</code></pre>
 </p-code>
 
 <p-collapse title="Project structure">
-  <p-file-list :groups="[
-    {
-      module: 'root',
-      files: [
-        { path: 'SKILL.md', change: 'agent entry point' },
-        { path: 'build.js', change: 'template → HTML CLI' }
-      ]
-    },
-    {
-      module: 'references',
-      files: [
-        { path: 'principles.md', change: 'design principles' },
-        { path: 'showcase.html', change: 'every component demoed' }
-      ]
-    },
-    {
-      module: 'src/components',
-      files: [
-        { path: '45 Vue SFCs + 31 .md docs', change: 'added' }
-      ]
-    },
-    {
-      module: 'src/styles',
-      files: [
-        { path: 'base.css', change: 'structural' },
-        { path: 'themes/notion.css', change: 'visual — swappable' }
-      ]
-    },
-    {
-      module: 'src',
-      files: [
-        { path: 'index.ts', change: 'registration + mount' },
-        { path: 'hljs.ts', change: '14-language highlighter' }
-      ]
-    },
-    {
-      module: 'dist',
-      files: [
-        { path: 'prism.iife.js', change: '~103KB gzip' }
-      ]
-    }
-  ]"></p-file-list>
+  <p-file-list>
+    <p-file-group module="root">
+      <p-file path="SKILL.md" purpose="Agent entry point"></p-file>
+      <p-file path="build.js" purpose="Template → single HTML CLI"></p-file>
+    </p-file-group>
+    <p-file-group module="references">
+      <p-file path="principles.md" purpose="Design principles + examples"></p-file>
+      <p-file path="showcase.html" purpose="Every component demoed"></p-file>
+    </p-file-group>
+    <p-file-group module="src/components">
+      <p-file path="45 Vue SFCs + 31 .md docs"></p-file>
+    </p-file-group>
+    <p-file-group module="src/styles">
+      <p-file path="base.css" purpose="Structural — do not touch"></p-file>
+      <p-file path="themes/notion.css" purpose="Visual — swappable"></p-file>
+    </p-file-group>
+    <p-file-group module="src">
+      <p-file path="index.ts" purpose="Registration + mount"></p-file>
+      <p-file path="hljs.ts" purpose="14-language highlighter"></p-file>
+    </p-file-group>
+    <p-file-group module="dist">
+      <p-file path="prism.iife.js" purpose="~103KB gzip"></p-file>
+    </p-file-group>
+  </p-file-list>
 </p-collapse>
 
 <hr>
