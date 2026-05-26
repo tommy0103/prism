@@ -1,8 +1,7 @@
 <template>
   <div :class="['prism-flow-arrow', variant]">
     <svg
-      v-if="!isVertical"
-      class="prism-flow-arrow-svg"
+      class="prism-flow-arrow-svg dir-h"
       viewBox="0 0 48 16"
       preserveAspectRatio="none"
       aria-hidden="true"
@@ -11,8 +10,7 @@
       <polyline class="arrow-head" points="38,4 44,8 38,12" />
     </svg>
     <svg
-      v-else
-      class="prism-flow-arrow-svg"
+      class="prism-flow-arrow-svg dir-v"
       viewBox="0 0 16 36"
       preserveAspectRatio="none"
       aria-hidden="true"
@@ -29,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, type Ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   /** 流转条件 / 触发原因。短词为主(miss, 2xx, event, retry…) */
@@ -43,11 +41,6 @@ const props = defineProps<{
   terse?: boolean
 }>()
 
-// 从父 <PFlow> 注入 vertical 状态
-const verticalRef = inject<Ref<boolean | undefined>>('prism-flow-vertical')
-const isVertical = computed(() => !!verticalRef?.value)
-
-// 自动判定短标签
 const isTerse = computed(() => {
   if (props.terse !== undefined) return props.terse
   return !!props.label && props.label.length <= 8

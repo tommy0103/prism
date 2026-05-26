@@ -22,7 +22,7 @@
 defineProps<{
   /** 语义色 — 默认只染 border-left(轻量化) */
   color?: 'accent' | 'success' | 'warning' | 'danger' | 'purple'
-  /** 节点形态类型,可以和 color 组合 */
+  /** 节点形态,可以和 color 组合 */
   type?: 'store' | 'external' | 'decision'
   /** 旧的"全染色"行为,需显式启用 */
   filled?: boolean

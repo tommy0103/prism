@@ -91,19 +91,19 @@
 
     <p-flow>
       <p-flow-node>浏览器</p-flow-node>
-      <p-flow-arrow label="HTTPS"></p-flow-arrow>
+      <p-flow-arrow></p-flow-arrow>
       <p-flow-node type="external">Nginx</p-flow-node>
-      <p-flow-arrow label="proxy"></p-flow-arrow>
+      <p-flow-arrow></p-flow-arrow>
       <p-flow-node color="warning" meta="3000/s">Rate Limiter</p-flow-node>
-      <p-flow-arrow label="pass"></p-flow-arrow>
+      <p-flow-arrow></p-flow-arrow>
       <p-flow-node color="accent">CORS</p-flow-node>
-      <p-flow-arrow label="ok"></p-flow-arrow>
+      <p-flow-arrow></p-flow-arrow>
       <p-flow-node color="accent" meta="0.3ms">Auth</p-flow-node>
       <p-flow-arrow label="JWT"></p-flow-arrow>
       <p-flow-node color="success" subtitle="POST /api/auth/login">路由处理</p-flow-node>
       <p-flow-arrow label="query"></p-flow-arrow>
       <p-flow-node type="store" color="purple">PostgreSQL</p-flow-node>
-      <p-flow-arrow label="JSON"></p-flow-arrow>
+      <p-flow-arrow></p-flow-arrow>
       <p-flow-node>浏览器</p-flow-node>
     </p-flow>
 

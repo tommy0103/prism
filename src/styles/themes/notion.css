@@ -640,87 +640,149 @@
 /* --- Steps / Timeline ------------------------------------- */
 
 .prism-steps {
-  margin-bottom: var(--p-space-5);
+  position: relative;
+  list-style: none;
+  padding: 0 0 0 28px;
+  margin: var(--p-space-5) 0;
+  counter-reset: prism-step;
 }
 
+/* 轨道线 */
 .prism-steps::before {
-  left: 11px;
-  top: 12px;
-  bottom: 12px;
-  width: 1.5px;
-  background: var(--p-border);
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--p-accent) 0,
+    var(--p-accent) var(--progress, 50%),
+    var(--p-border-strong) var(--progress, 50%),
+    var(--p-border-strong) 100%
+  );
 }
 
+/* ---------- 单个 step ---------- */
 .prism-step {
-  padding-left: 36px;
-  padding-bottom: var(--p-space-5);
+  position: relative;
+  padding: 0 0 var(--p-space-6);
+  counter-increment: prism-step;
 }
+.prism-step:last-child { padding-bottom: 0; }
 
-.prism-step:last-child {
-  padding-bottom: 0;
-}
-
+/* 节点(基于 progress) */
 .prism-step::before {
-  left: 5px;
+  content: '';
+  position: absolute;
+  left: -28px;
   top: 6px;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 2px solid var(--p-border);
   background: var(--p-bg);
+  border: 2px solid var(--p-border-strong);
+  box-sizing: border-box;
+  z-index: 1;
+  transition: all 200ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-
-.prism-step.active::before {
-  border-color: var(--p-accent);
+/* todo:默认空心灰圈,不需要规则 */
+.prism-step[data-progress="done"]::before {
   background: var(--p-accent);
+  border-color: var(--p-accent);
+}
+.prism-step[data-progress="active"]::before {
+  background: var(--p-bg);
+  border-color: var(--p-accent);
+  border-width: 4px;
   box-shadow: 0 0 0 3px var(--p-accent-bg);
 }
 
-.prism-step.completed::before {
-  border-color: var(--p-success);
-  background: var(--p-success);
+/* flag:改变节点颜色基调,不改变形态 */
+.prism-step[data-flag="warning"]::before { border-color: var(--p-warning); }
+.prism-step[data-flag="warning"][data-progress="done"]::before { background: var(--p-warning); }
+.prism-step[data-flag="warning"][data-progress="active"]::before { box-shadow: 0 0 0 3px var(--p-warning-bg); }
+
+.prism-step[data-flag="danger"]::before { border-color: var(--p-danger); }
+.prism-step[data-flag="danger"][data-progress="done"]::before { background: var(--p-danger); }
+.prism-step[data-flag="danger"][data-progress="active"]::before { box-shadow: 0 0 0 3px var(--p-danger-bg); }
+
+.prism-step[data-flag="success"]::before { border-color: var(--p-success); }
+.prism-step[data-flag="success"][data-progress="done"]::before { background: var(--p-success); }
+.prism-step[data-flag="success"][data-progress="active"]::before { box-shadow: 0 0 0 3px var(--p-success-bg); }
+
+.prism-step[data-flag="info"]::before { border-color: var(--p-info); }
+.prism-step[data-flag="info"][data-progress="done"]::before { background: var(--p-info); }
+.prism-step[data-flag="info"][data-progress="active"]::before { box-shadow: 0 0 0 3px var(--p-info-bg); }
+
+/* ---------- 内容区 ---------- */
+.prism-step-num {
+  font-family: var(--p-font-mono);
+  font-size: 11px;
+  color: var(--p-text-light);
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+  min-height: 14px;  /* 没有 flag 时也保留高度,标题位置稳定 */
+}
+/* 用 counter 自动生成编号 */
+.prism-step-num::before {
+  content: 'STEP ' counter(prism-step, decimal-leading-zero);
 }
 
-.prism-step.completed::after {
-  left: 8px;
-  top: 8px;
-  width: 4px;
-  height: 7px;
-  border: solid var(--p-bg);
-  border-width: 0 1.5px 1.5px 0;
+.prism-step-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--p-font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;
 }
-
-.prism-step.danger::before {
-  border-color: var(--p-danger);
-  background: var(--p-danger);
+.prism-step-flag svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
 }
-
-.prism-step.danger::after {
-  left: 11px;
-  top: 8px;
-  width: 2px;
-  height: 7px;
-  background: var(--p-bg);
-  border-radius: 1px;
-}
-
-.prism-step.warning::before {
-  border-color: var(--p-warning);
-  background: var(--p-warning);
-}
+.prism-step[data-flag="warning"] .prism-step-flag { color: var(--p-warning-text); background: var(--p-warning-bg); }
+.prism-step[data-flag="danger"]  .prism-step-flag { color: var(--p-danger-text);  background: var(--p-danger-bg); }
+.prism-step[data-flag="success"] .prism-step-flag { color: var(--p-success-text); background: var(--p-success-bg); }
+.prism-step[data-flag="info"]    .prism-step-flag { color: var(--p-info-text);    background: var(--p-info-bg); }
 
 .prism-step-title {
-  font-weight: 500;
-  font-size: 15px;
-  line-height: 1.7;
+  font-family: var(--p-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--p-text);
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+.prism-step[data-progress="todo"] .prism-step-title {
+  color: var(--p-text-secondary);
 }
 
 .prism-step-desc {
-  font-size: 14px;
+  font-size: 14.5px;
   color: var(--p-text-secondary);
-  margin-top: var(--p-space-1);
-  line-height: 1.5;
+  line-height: 1.6;
 }
+
+/* 有 flag 时,desc 加左侧色条 */
+.prism-step[data-flag] .prism-step-desc {
+  padding-left: 10px;
+  border-left: 2px solid var(--p-border);
+  margin-top: 6px;
+}
+.prism-step[data-flag="warning"] .prism-step-desc { border-left-color: var(--p-warning); }
+.prism-step[data-flag="danger"]  .prism-step-desc { border-left-color: var(--p-danger); }
+.prism-step[data-flag="success"] .prism-step-desc { border-left-color: var(--p-success); }
+.prism-step[data-flag="info"]    .prism-step-desc { border-left-color: var(--p-info); }
 
 /* --- Bar Chart -------------------------------------------- */
 
@@ -1213,26 +1275,55 @@ pre:hover .prism-copy-btn {
   border-bottom-color: var(--p-text);
 }
 
-/* --- Flow / Architecture Diagram (v2) ---------- */
+/* --- Flow / Architecture Diagram (v2 — fixed) ---------- */
 
+/* 外层:container 宿主 + 视觉容器 */
 .prism-flow {
-  display: flex;
-  align-items: center;
-  gap: 0;
+  container-type: inline-size;
+  container-name: prism-flow;
+
   margin: var(--p-space-5) 0;
   padding: var(--p-space-6) var(--p-space-4) var(--p-space-5);
-  background: var(--p-bg-secondary);
   border-radius: var(--p-radius-lg);
   overflow-x: auto;
+  position: relative;
+
+  background:
+    linear-gradient(to left, var(--p-bg-secondary), transparent 24px) right / 100% 100% no-repeat,
+    var(--p-bg-secondary);
 }
 .prism-flow.vertical {
-  flex-direction: column;
-  align-items: flex-start;
   padding: var(--p-space-6);
+  background: var(--p-bg-secondary);
 }
 .prism-flow.plain {
   background: transparent;
   padding: var(--p-space-4) 0;
+}
+.prism-flow.plain.vertical {
+  background: transparent;
+}
+
+/* 内层:真正的 flex 容器 */
+.prism-flow-inner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.prism-flow.vertical .prism-flow-inner {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 窄容器(≤ 480px)自动切纵向 —— 现在改成切 .prism-flow-inner */
+@container prism-flow (max-width: 480px) {
+  .prism-flow:not(.no-stack):not(.vertical) .prism-flow-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .prism-flow:not(.no-stack):not(.vertical) {
+    overflow-x: visible;
+  }
 }
 
 /* ---------- 节点 ---------- */
@@ -1254,7 +1345,6 @@ pre:hover .prism-copy-btn {
   line-height: 1.3;
 }
 
-/* 节点形态 */
 .prism-flow-node.store    { border-left: 3px solid var(--p-purple); }
 .prism-flow-node.external {
   border-style: dashed;
@@ -1273,21 +1363,18 @@ pre:hover .prism-copy-btn {
   border: 1.5px solid var(--p-warning);
 }
 
-/* 语义色 — 默认轻量(只染 border-left) */
 .prism-flow-node.accent  { border-left: 3px solid var(--p-accent); }
 .prism-flow-node.success { border-left: 3px solid var(--p-success); }
 .prism-flow-node.warning { border-left: 3px solid var(--p-warning); }
 .prism-flow-node.danger  { border-left: 3px solid var(--p-danger); }
 .prism-flow-node.purple  { border-left: 3px solid var(--p-purple); }
 
-/* 重度填充 — filled prop 触发 */
 .prism-flow-node.filled.accent  { background: var(--p-accent-bg);  color: var(--p-accent-text);  border-color: var(--p-accent); }
 .prism-flow-node.filled.success { background: var(--p-success-bg); color: var(--p-success-text); border-color: var(--p-success); }
 .prism-flow-node.filled.warning { background: var(--p-warning-bg); color: var(--p-warning-text); border-color: var(--p-warning); }
 .prism-flow-node.filled.danger  { background: var(--p-danger-bg);  color: var(--p-danger-text);  border-color: var(--p-danger); }
 .prism-flow-node.filled.purple  { background: var(--p-purple-bg);  color: var(--p-purple-text);  border-color: var(--p-purple); }
 
-/* 节点 meta chip */
 .prism-flow-node-meta {
   font-family: var(--p-font-mono);
   font-size: 11px;
@@ -1298,7 +1385,6 @@ pre:hover .prism-copy-btn {
   letter-spacing: -0.01em;
 }
 
-/* 节点 subtitle 双行版 */
 .prism-flow-node.has-subtitle {
   flex-direction: column;
   align-items: flex-start;
@@ -1318,7 +1404,7 @@ pre:hover .prism-copy-btn {
   line-height: 1.2;
 }
 
-/* ---------- 箭头(SVG) ---------- */
+/* ---------- 箭头容器 ---------- */
 .prism-flow-arrow {
   position: relative;
   flex-shrink: 0;
@@ -1328,21 +1414,45 @@ pre:hover .prism-copy-btn {
   justify-content: center;
   align-self: center;
 }
+
+/* 横向(默认) */
 .prism-flow:not(.vertical) .prism-flow-arrow {
   width: 48px;
   height: 16px;
 }
+/* 显式纵向 */
 .prism-flow.vertical .prism-flow-arrow {
   width: 16px;
   height: 36px;
   margin-left: 22px;
   align-self: flex-start;
 }
+/* 窄容器自动:箭头容器变纵向尺寸 */
+@container prism-flow (max-width: 480px) {
+  .prism-flow:not(.no-stack):not(.vertical) .prism-flow-arrow {
+    width: 16px;
+    height: 36px;
+    margin-left: 22px;
+    align-self: flex-start;
+  }
+}
+
+/* ---------- 双 SVG 切换 (dir-h / dir-v) ---------- */
 .prism-flow-arrow-svg {
   width: 100%;
   height: 100%;
   display: block;
 }
+.prism-flow-arrow-svg.dir-v { display: none; }
+
+.prism-flow.vertical .prism-flow-arrow-svg.dir-h { display: none; }
+.prism-flow.vertical .prism-flow-arrow-svg.dir-v { display: block; }
+
+@container prism-flow (max-width: 480px) {
+  .prism-flow:not(.no-stack):not(.vertical) .prism-flow-arrow-svg.dir-h { display: none; }
+  .prism-flow:not(.no-stack):not(.vertical) .prism-flow-arrow-svg.dir-v { display: block; }
+}
+
 .prism-flow-arrow-svg .arrow-line {
   stroke: currentColor;
   stroke-width: 1.5;
@@ -1356,7 +1466,6 @@ pre:hover .prism-copy-btn {
   stroke-linejoin: round;
 }
 
-/* 箭头变体 */
 .prism-flow-arrow.thick { color: var(--p-text); }
 .prism-flow-arrow.thick .arrow-line,
 .prism-flow-arrow.thick .arrow-head { stroke-width: 2.5; }
@@ -1383,9 +1492,11 @@ pre:hover .prism-copy-btn {
   z-index: 1;
   border-radius: 2px;
 }
-.prism-flow.plain .prism-flow-arrow.fail::before { background: var(--p-bg); }
+.prism-flow.plain .prism-flow-arrow.fail::before {
+  background: var(--p-bg);
+}
 
-/* ---------- 箭头标签(限宽 + 换行,根除溢出) ---------- */
+/* ---------- 标签 ---------- */
 .prism-flow-label {
   position: absolute;
   font-family: var(--p-font-mono);
@@ -1403,9 +1514,8 @@ pre:hover .prism-copy-btn {
   white-space: normal;
   width: max-content;
 }
-.prism-flow-label.terse {
-  white-space: nowrap;
-}
+.prism-flow-label.terse { white-space: nowrap; }
+
 .prism-flow:not(.vertical) .prism-flow-label {
   left: 50%;
   top: calc(100% + 4px);
@@ -1415,6 +1525,13 @@ pre:hover .prism-copy-btn {
   left: calc(100% + 6px);
   top: 50%;
   transform: translateY(-50%);
+}
+@container prism-flow (max-width: 480px) {
+  .prism-flow:not(.no-stack):not(.vertical) .prism-flow-label {
+    left: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+  }
 }
 .prism-flow.plain .prism-flow-label {
   background: var(--p-bg-secondary);
