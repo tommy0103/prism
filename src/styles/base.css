@@ -295,6 +295,26 @@
   text-align: center;
 }
 
+/* --- Tracks ----------------------------------------------- */
+
+.prism-track {
+  display: flex;
+}
+
+.prism-track-head {
+  display: flex;
+  align-items: center;
+}
+
+.prism-track-flag {
+  display: inline-flex;
+  align-items: center;
+}
+
+.prism-finding-detail {
+  display: block;
+}
+
 /* --- Contrast --------------------------------------------- */
 
 .prism-contrast {

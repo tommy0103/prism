@@ -95,6 +95,8 @@ For detailed props, slots, and examples, read the `.md` file next to each compon
 | `<p-term>` | Inline term definition (hover tooltip) | `src/components/PTerm.md` |
 | `<p-myth>` | Misconception → correction | `src/components/PMyth.md` |
 | `<p-analogy>` | Analogy mapping (A ≈ B, because C) | `src/components/PAnalogy.md` |
+| `<p-tracks>` + `<p-track>` | Parallel evaluation tracks (not sequential) | `src/components/PTracks.md` |
+| `<p-finding>` | Observation within a track, with optional detail | `src/components/PFinding.md` |
 
 ## Theming
 

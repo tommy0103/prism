@@ -109,9 +109,9 @@ No build step needed — the runtime is pre-built. The agent discovers the skill
 
   <h4>结果</h4>
   <p-steps>
-    <p-step status="completed" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
-    <p-step status="danger" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
-    <p-step status="danger" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
+    <p-step progress="done" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
+    <p-step progress="active" flag="danger" flag-label="BUG" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
+    <p-step flag="danger" flag-label="IMPACT" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
   </p-steps>
 </p-collapse>
 ```
@@ -186,6 +186,8 @@ npx http-server . -p 3000
 | `<p-pages> + <p-page>` | Document-level multi-page (single file) |
 | `<p-copy>` | Copy-to-clipboard button |
 | `<p-params> + <p-param>` | Interactive parameter panel |
+| `<p-tracks> + <p-track>` | Parallel evaluation tracks with lane colors + flags |
+| `<p-finding>` | Observation/result within a track, with optional detail |
 
 Standard HTML (`<h1>`–`<h4>`, `<p>`, `<hr>`, `<table>`, `<code>`) is auto-styled.
 
@@ -273,7 +275,7 @@ prism/
 │   ├── showcase.html         # Every component demoed
 │   └── example-vue.html      # Minimal example
 ├── src/
-│   ├── components/           # 34 Vue SFCs + .md docs
+│   ├── components/           # 43 Vue SFCs + 29 .md docs
 │   ├── styles/
 │   │   ├── base.css          # Structural — don't touch
 │   │   └── themes/notion.css # Visual — swappable

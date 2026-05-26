@@ -818,6 +818,33 @@ const AUTH_DUAL_MODE = process.env.AUTH_DUAL_MODE === 'true';
       <p><strong>部署协调：</strong>移动端团队必须在后端迁移上线前发布客户端更新。Session 失效是不可逆的。</p>
     </p-callout>
 
+    <hr>
+
+    <!-- ───── 评估轨道 ───── -->
+
+    <h2>评估轨道</h2>
+
+    <p>对认证系统迁移方案的多维度并行评估。每个轨道是独立的评审维度，不是先后步骤。</p>
+
+    <p-tracks>
+      <p-track title="安全性" flag="passed">
+        JWT 签名校验 + refresh token 轮换 + 黑名单机制，覆盖了 OWASP 认证 checklist 的核心项。
+      </p-track>
+      <p-track title="性能" flag="passed" desc="热路径校验 0.3ms，相比旧架构 session 查询 2.5ms 提升 88%。"></p-track>
+      <p-track title="并发安全" flag="blocked">
+        <p-finding title="并发 refresh 竞态">
+          两个 tab 同时刷新会触发误撤销。
+          <template #detail>
+            <p>见 P0 issue：<code>rotateRefreshToken</code> 无法区分合法并发和 token 盗用重放。</p>
+          </template>
+        </p-finding>
+      </p-track>
+      <p-track title="可观测性" flag="polish" desc="缺少 token 签发/刷新/撤销的 metrics 埋点，需要在上线前补充 Grafana dashboard。"></p-track>
+      <p-track title="向后兼容" flag="at-risk">
+        3 个破坏性变更。移动端客户端需要在后端上线前发布更新。
+      </p-track>
+    </p-tracks>
+
   </div>
 
   <script src="../dist/prism.iife.js"></script>

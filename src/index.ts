@@ -40,6 +40,9 @@ import PBranchItem from './components/PBranchItem.vue'
 import PTerm from './components/PTerm.vue'
 import PMyth from './components/PMyth.vue'
 import PAnalogy from './components/PAnalogy.vue'
+import PTracks from './components/PTracks.vue'
+import PTrack from './components/PTrack.vue'
+import PFinding from './components/PFinding.vue'
 
 import 'virtual:uno.css'
 import './styles/base.css'
@@ -89,6 +92,9 @@ const components: Record<string, Component> = {
   PTerm,
   PMyth,
   PAnalogy,
+  PTracks,
+  PTrack,
+  PFinding,
 }
 
 function mount(el: string | HTMLElement): App {
