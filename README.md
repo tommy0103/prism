@@ -43,7 +43,7 @@ Teach agents to write with hierarchy, evidence, and structure, then render it as
 
 ### Pillar 01 · The visual layer — stop reinventing CSS
 
-Prism ships **34 production-ready components** with a coherent Notion-inspired theme. Decision cards, callouts, flow diagrams, metrics tiles, source-code blocks with line ranges — all visually consistent, all dark-mode aware, all already debugged.
+Prism ships **45 production-ready components** with a coherent Notion-inspired theme. Decision cards, callouts, flow diagrams, metrics tiles, source-code blocks with line ranges — all visually consistent, all dark-mode aware, all already debugged.
 
 Agents pick from the DSL. They never write a single `<style>` tag.
 

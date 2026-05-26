@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
-    "build:html": "node build.js"
+    "build:html": "node build.js",
+    "check": "node scripts/check-inventory.js",
+    "lint": "node scripts/lint-template.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",
