@@ -42,6 +42,7 @@ Standard HTML (`<h1>`–`<h4>`, `<p>`, `<hr>`, `<table>`, `<code>`, `<strong>`, 
 Read `references/principles.md` for the full version with examples. Key rules:
 
 - **Breathe.** Max 2–3 heavy components per viewport. Use `<hr>` between sections.
+- **Document-level budget.** The total number of heavy components (decision, flow, branch, compare, contrast, analogy, myth, steps, stacked-bar) should not exceed the number of `<h2>` sections. If you have 5 sections and 12 heavy components, most of them should be prose instead. Components earn attention through scarcity — a document where everything is a card is a document where nothing stands out.
 - **Hierarchy first.** Verdict visible, evidence collapsed.
 - **Prose bridges components.** Never stack two components without connective text.
 - **Collapse by default.** References, code, details go in `<p-collapse>`.

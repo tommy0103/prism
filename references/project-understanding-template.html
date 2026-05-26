@@ -1,0 +1,295 @@
+<!-- lang: zh-CN -->
+<h1>Prism 当前项目理解</h1>
+<p class="prism-subtitle">一份面向项目作者的结构化观察：Prism 现在不只是把内容变好看，而是在为 agent 写作建立一套可组合的文档语法。</p>
+
+<p-decision status="approved" verdict="判断">
+  <template #title>Prism 的核心定位已经从 HTML renderer 走向 Agent Document UI DSL</template>
+  <p>我理解当前项目的关键变化是：它不再只是给 Markdown 结果套皮，而是让 agent 先用 <code>decision</code>、<code>source</code>、<code>flow</code>、<code>steps</code>、<code>contrast</code>、<code>myth</code>、<code>analogy</code> 这些语义块组织思考，再输出一个可阅读、可扫描、可引用的单文件 HTML artifact。</p>
+</p-decision>
+
+<p>先看几个稳定事实。它们说明项目已经具备了「可发布的小型 runtime」和「持续扩展的写作词汇表」两种特征。</p>
+
+<p-metrics>
+  <p-metric value="40" label="已注册 Vue 组件"></p-metric>
+  <p-metric value="27" label="组件文档文件"></p-metric>
+  <p-metric value="335.7 KB" label="IIFE runtime"></p-metric>
+  <p-metric value="107.8 KB" label="gzip 后体积"></p-metric>
+</p-metrics>
+
+<hr>
+
+<h2>项目身份</h2>
+
+<p>我会把 Prism 描述成一个面向 agent 的文档 UI 协议：作者写的是有语义的 HTML/Vue template，读者看到的是有层次、有证据、有交互的单文件文档。</p>
+
+<p-flow>
+  <p-flow-node color="accent" subtitle="prompt / review / spec">Agent 意图</p-flow-node>
+  <p-flow-arrow label="compose"></p-flow-arrow>
+  <p-flow-node color="purple" subtitle="p-decision / p-source / p-flow">Prism DSL</p-flow-node>
+  <p-flow-arrow label="build"></p-flow-arrow>
+  <p-flow-node type="store" meta="single file">HTML artifact</p-flow-node>
+  <p-flow-arrow label="scan"></p-flow-arrow>
+  <p-flow-node color="success" subtitle="verdict first, evidence on demand">读者理解</p-flow-node>
+</p-flow>
+
+<p>这个定位和普通 <code>md2html</code> 的差异，不在视觉细节，而在写作模型。</p>
+
+<p-contrast word="HTML" desc="同一种输出格式，两种完全不同的用法">
+  <template #left>
+    <div class="context">md2html 语境</div>
+    <div class="meaning">HTML 是 Markdown 的渲染目标，重点是忠实转换已有结构。</div>
+  </template>
+  <template #right>
+    <div class="context">Prism 语境</div>
+    <div class="meaning">HTML 是 agent 的表达介质，重点是主动组织判断、证据、流程和风险。</div>
+  </template>
+</p-contrast>
+
+<p-collapse title="为什么这个定位成立">
+  <p>README 里的两根支柱已经很明确：一根是视觉层，减少 agent 临场写 CSS；另一根是写作层，让组件本身成为组织信息的 rubric。现在新增的 explainer 组件把第二根支柱补得更实了。</p>
+  <p-code file="README.md / 定位摘要">
+    <pre><code>Prism ships production-ready components with a coherent theme.
+Each component encodes a writing convention.
+The DSL is the rubric.</code></pre>
+  </p-code>
+</p-collapse>
+
+<hr>
+
+<h2>架构理解</h2>
+
+<p>当前架构很干净：源码侧是 Vue 组件和 CSS 主题，使用侧是 template，构建侧把 runtime 和样式内联成单 HTML。这里的好处是 artifact 不需要服务器，也不需要目标环境安装依赖。</p>
+
+<p-flow vertical>
+  <p-flow-node color="accent" subtitle="agent-facing instruction">SKILL.md</p-flow-node>
+  <p-flow-arrow label="guides"></p-flow-arrow>
+  <p-flow-node color="purple" subtitle="only Vue template content">template.html</p-flow-node>
+  <p-flow-arrow label="wrap"></p-flow-arrow>
+  <p-flow-node subtitle="inject runtime and mount">build.js</p-flow-node>
+  <p-flow-arrow label="loads"></p-flow-arrow>
+  <p-flow-node type="store" subtitle="Vue runtime + components + inline CSS">dist/prism.iife.js</p-flow-node>
+  <p-flow-arrow label="emits"></p-flow-arrow>
+  <p-flow-node color="success" subtitle="portable artifact">index.html</p-flow-node>
+</p-flow>
+
+<p>实现上，<code>build.js</code> 负责把模板包进 HTML；<code>src/index.ts</code> 负责注册所有 Prism 组件并挂载；<code>vite.config.ts</code> 负责把 CSS 注入 IIFE runtime。</p>
+
+<p-collapse title="关键代码引用">
+  <p-source id="source-build" path="build.js:27-34" lang="JavaScript">
+    <pre><code>const html = `&lt;!DOCTYPE html&gt;
+&lt;html lang="${lang}"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;${title}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="app" class="prism"&gt;</code></pre>
+    <template #note>构建器的职责很窄：读模板、读 runtime、包成单文件。这个边界让 Prism 保持工具感，而不是变成完整前端框架。</template>
+  </p-source>
+
+  <p-source id="source-index" path="src/index.ts:44-49, 51-92" lang="TypeScript">
+    <pre><code>import 'virtual:uno.css'
+import './styles/base.css'
+import './styles/themes/notion.css'
+import './styles/hljs-theme.css'
+import './hljs'
+import { createToc } from './toc'
+
+const components: Record&lt;string, Component&gt; = {
+  PDecision,
+  PCallout,
+  PCollapse,
+  PSource,
+  PFlow,
+  PSteps,
+  PParams,
+  PContrast,
+  PBranch,
+  PTerm,
+  PMyth,
+  PAnalogy,
+}</code></pre>
+    <template #note>组件注册表是 Prism 的公开词汇表。它越像文档语法，项目越有辨识度。</template>
+  </p-source>
+</p-collapse>
+
+<hr>
+
+<h2>语义词汇表</h2>
+
+<p>我把现有组件分成三层：基础阅读组件、工程证据组件、解释型组件。新增的解释型组件让 Prism 很明显区别于普通报告模板。</p>
+
+<p-grid cols="3">
+  <p-card title="阅读层">
+    <p>处理文档的基础节奏：折叠、分页、标签页、卡片、分割线、网格、目录。</p>
+    <p><p-tag>structure</p-tag> <p-tag>scan</p-tag></p>
+  </p-card>
+  <p-card title="证据层">
+    <p>处理工程文档最需要的证据：源码、行号、复制、指标、流程、文件影响、测试覆盖。</p>
+    <p><p-tag>source</p-tag> <p-tag>trace</p-tag></p>
+  </p-card>
+  <p-card title="解释层">
+    <p>处理复杂概念的理解：术语、误解纠正、类比、分支决策、中性对照。</p>
+    <p><p-tag>mental model</p-tag> <p-tag>teaching</p-tag></p>
+  </p-card>
+</p-grid>
+
+<p>这组解释型组件是当前版本里最有战略意义的增强。它们让 artifact 不只是「漂亮的报告」，而是更像一个会引导读者理解复杂系统的界面。</p>
+
+<p-myth>
+  <template #myth>组件越多，项目就越像杂乱的 UI kit。</template>
+  <template #truth>如果组件都对应明确写作动作，词汇表增长反而会让 agent 更少乱写结构。关键不是数量，而是每个组件是否代表一种稳定的表达意图。</template>
+</p-myth>
+
+<p-analogy
+  source="编程语言的标准库"
+  source-desc="常用抽象被命名、稳定下来，开发者不必每次从零写。"
+  target="Prism 的组件词汇表"
+  target-desc="常见文档表达被命名、稳定下来，agent 不必每次从零组织 UI。"
+  because="两者都把重复出现的模式变成可复用的语义单位。"
+></p-analogy>
+
+<hr>
+
+<h2>CSS 与主题策略</h2>
+
+<p>我对当前 CSS 方向的理解是：对外保持普通 CSS contract，对内允许开发者用 UnoCSS 提高主题和样式生产力。这和我们刚才讨论的路线一致。</p>
+
+<p-decision status="approved" verdict="方向正确">
+  <template #title>UnoCSS 应该服务 Prism 作者，而不是成为 Prism 文档作者的负担</template>
+  <p><code>uno.config.ts</code> 已经把 <code>--p-*</code> token 映射成 UnoCSS theme tokens。这样开发者可以用原子化工具构建 CSS，但最终用户仍然面对稳定的 <code>.prism-*</code> class 和 CSS variables。</p>
+</p-decision>
+
+<p-collapse title="UnoCSS 集成证据">
+  <p-source id="source-vite" path="vite.config.ts:39-44" lang="TypeScript">
+    <pre><code>export default defineConfig({
+  plugins: [
+    UnoCSS(),
+    vue(),
+    inlineCssPlugin(),
+  ],
+})</code></pre>
+  </p-source>
+
+  <p-source id="source-uno" path="uno.config.ts:7-39" lang="TypeScript">
+    <pre><code>theme: {
+  colors: {
+    p: {
+      bg: 'var(--p-bg)',
+      surface: 'var(--p-surface)',
+      text: 'var(--p-text)',
+      accent: 'var(--p-accent)',
+      success: 'var(--p-success)',
+      warning: 'var(--p-warning)',
+      danger: 'var(--p-danger)',
+    },
+  },
+}</code></pre>
+    <template #note>这是很健康的分层：UnoCSS 是 authoring layer，CSS variables 是 public contract。</template>
+  </p-source>
+</p-collapse>
+
+<p-compare>
+  <template #pro>
+    <div class="prism-compare-col-title">保留当前方向</div>
+    <ul>
+      <li>开发者写样式更轻，适合扩展多主题。</li>
+      <li>用户侧仍然是普通 HTML、普通 CSS、单文件 artifact。</li>
+      <li>组件语义不会被 utility class 淹没。</li>
+    </ul>
+  </template>
+  <template #con>
+    <div class="prism-compare-col-title">需要守住边界</div>
+    <ul>
+      <li>不要把 utility class 暴露成文档主写法。</li>
+      <li>不要让 runtime 用户依赖 UnoCSS 构建链。</li>
+      <li>需要明确哪些 <code>.prism-*</code> class 属于稳定 API。</li>
+    </ul>
+  </template>
+</p-compare>
+
+<hr>
+
+<h2>增强脉络</h2>
+
+<p>从最近提交和当前未提交改动看，项目增强集中在四条线：品牌表达、交互组件、解释型组件、主题/构建层。它不是一次性加功能，而是在补全「agent 写作系统」的各个面。</p>
+
+<p-steps :progress="82">
+  <p-step progress="done" flag="success" title="品牌与 README 表达增强" desc="新增 logo、showcase hero、before/after，对外叙事更清楚。"></p-step>
+  <p-step progress="done" flag="success" title="交互组件补齐" desc="tabs、pages、copy、params 让单文件文档可以承载更复杂的阅读路径。"></p-step>
+  <p-step progress="done" flag="success" title="主题感知代码高亮" desc="hljs-theme.css 与 runtime 内联让代码证据更可靠。"></p-step>
+  <p-step progress="done" flag="success" title="解释型组件进入词汇表" desc="contrast、branch、term、myth、analogy 明显扩展了文档表达能力。"></p-step>
+  <p-step progress="active" flag="warning" flag-label="POLISH" title="文档口径同步" desc="README 仍有 34 components、旧 status 示例等历史口径，需要跟当前 API 对齐。"></p-step>
+</p-steps>
+
+<p>当前未提交改动也说明你正在做一件正确的事：把旧的 <code>status</code> timeline 示例迁移到 <code>progress + flag</code>，让进度和风险成为两个独立维度。</p>
+
+<p-collapse title="当前工作区影响图">
+  <p-file-list :groups="[
+    { module: 'Principles', files: [
+      { path: 'references/principles.md', change: '更新示例' }
+    ] },
+    { module: 'Showcase', files: [
+      { path: 'references/showcase.html', change: '更新示例' }
+    ] },
+    { module: 'Component docs', files: [
+      { path: 'src/components/PStep.md', change: 'API 文档' },
+      { path: 'src/components/PAnalogy.md', change: '规则补充' }
+    ] }
+  ]"></p-file-list>
+</p-collapse>
+
+<hr>
+
+<h2>我看到的风险</h2>
+
+<p>这些不是方向性问题，更像发布前需要打磨的接口和文档一致性。它们影响的是使用者信任，而不是项目根基。</p>
+
+<p-decision status="exploring" verdict="P1">
+  <template #title>README 的组件数量和组件清单落后于源码</template>
+  <p>当前 <code>src/index.ts</code> 注册了 40 个 Vue 组件，但 README 仍多处写 34。这个数字会让读者怀疑文档是否滞后，建议发布前统一口径。</p>
+</p-decision>
+
+<p-decision status="pending" verdict="P2">
+  <template #title>旧 timeline API 仍出现在主路径示例中</template>
+  <p><code>status=&quot;completed&quot;</code> 仍在 README 示例中出现。代码保留兼容很好，但主文档应该推广 <code>progress + flag</code>，否则 agent 会继续学旧写法。</p>
+</p-decision>
+
+<p-decision status="pending" verdict="P2">
+  <template #title>CSS contract 还可以更明确</template>
+  <p>项目已经有 <code>--p-*</code> token、<code>.prism-*</code> class、UnoCSS authoring layer，但还缺一份明确说明：哪些 selector 稳定，哪些只是内部实现。</p>
+</p-decision>
+
+<p-collapse title="风险对应文件">
+  <p-file-list :groups="[
+    { module: 'Public docs', files: [
+      { path: 'README.md', change: '组件数量 / 旧示例' },
+      { path: 'SKILL.md', change: 'quick reference 已较新' }
+    ] },
+    { module: 'Theme contract', files: [
+      { path: 'src/styles/base.css', change: '结构层' },
+      { path: 'src/styles/themes/notion.css', change: '主题层' },
+      { path: 'uno.config.ts', change: 'authoring layer' }
+    ] }
+  ]"></p-file-list>
+</p-collapse>
+
+<hr>
+
+<h2>下一步建议</h2>
+
+<p>我会优先把「公开叙事」和「稳定 contract」补齐。组件继续加没问题，但现在最值钱的是让外部用户相信这套 DSL 稳定、可学、可扩展。</p>
+
+<p-checklist>
+  <p-check-item checked>继续保留单文件 HTML 输出，不引入运行时服务依赖。</p-check-item>
+  <p-check-item checked>继续把 UnoCSS 放在内部 authoring layer，而不是文档作者 API。</p-check-item>
+  <p-check-item>更新 README 的组件数量、组件家族和主示例。</p-check-item>
+  <p-check-item>给 <code>progress + flag</code> 写一段 migration note，说明 <code>status</code> 是兼容别名。</p-check-item>
+  <p-check-item>新增 CSS contract 文档：stable class、token、theme authoring boundary。</p-check-item>
+  <p-check-item>把 explainer 组件加入 README 的家族表，而不是只出现在 SKILL.md。</p-check-item>
+</p-checklist>
+
+<p-callout type="info" icon="i">
+  <p><strong>我的一句话理解：</strong>Prism 最有价值的地方不是「HTML 比 Markdown 好看」，而是「agent 可以用更精确的文档语法表达判断、证据和解释」。后续所有技术选择，包括 UnoCSS、主题、组件扩展，都应该服务这个语法感。</p>
+</p-callout>

@@ -52,3 +52,8 @@ Decision tree / branching flow. Unlike `<p-flow>` (linear), branch shows conditi
 - Supports arbitrary nesting depth via `#children` slot.
 - `cond` is the branching condition — keep it short (mono font, chip style).
 - `status` colors the node dot: `success` = green, `danger` = red, `leaf` = accent blue.
+
+## When NOT to use
+
+- If there are only 2 branches with no nesting, a sentence with "if X then Y, otherwise Z" is clearer than a visual tree.
+- If the branching logic is already shown in code via `<p-source>`, don't duplicate it as a branch diagram — the code is the authoritative representation.

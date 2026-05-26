@@ -2131,3 +2131,150 @@ pre:hover .prism-copy-btn {
 .prism-myth-truth .content strong {
   font-weight: 600;
 }
+
+/* --- Tracks (并列维度评估) ---------- */
+
+.prism-tracks {
+  display: flex;
+  flex-direction: column;
+  margin: var(--p-space-5) 0;
+  border-top: 1px solid var(--p-border);
+  /* 用 CSS counter 给每个 .prism-track 自动分配 lane 色 (1-5 循环) */
+  counter-reset: prism-track-lane;
+}
+
+.prism-track {
+  display: grid;
+  grid-template-columns: 6px 1fr;
+  gap: var(--p-space-5);
+  padding: var(--p-space-4) 0;
+  border-bottom: 1px solid var(--p-border);
+  counter-increment: prism-track-lane;
+}
+
+/* 左侧 lane 色条 */
+.prism-track-lane {
+  border-radius: 3px;
+  background: var(--p-border-strong);  /* fallback */
+}
+
+/* 自动分配 lane 色(按出现顺序循环 1-5) */
+.prism-tracks > .prism-track:nth-child(5n+1) .prism-track-lane { background: var(--p-accent); }
+.prism-tracks > .prism-track:nth-child(5n+2) .prism-track-lane { background: var(--p-success); }
+.prism-tracks > .prism-track:nth-child(5n+3) .prism-track-lane { background: var(--p-purple); }
+.prism-tracks > .prism-track:nth-child(5n+4) .prism-track-lane { background: var(--p-warning); }
+.prism-tracks > .prism-track:nth-child(5n+5) .prism-track-lane { background: var(--p-info); }
+
+/* 显式指定 lane(覆盖自动循环) */
+.prism-track[data-lane="1"] .prism-track-lane { background: var(--p-accent); }
+.prism-track[data-lane="2"] .prism-track-lane { background: var(--p-success); }
+.prism-track[data-lane="3"] .prism-track-lane { background: var(--p-purple); }
+.prism-track[data-lane="4"] .prism-track-lane { background: var(--p-warning); }
+.prism-track[data-lane="5"] .prism-track-lane { background: var(--p-info); }
+
+/* ---------- 内容区 ---------- */
+.prism-track-body {
+  min-width: 0;  /* 防止长内容撑爆 grid 列 */
+}
+
+.prism-track-head {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+  margin-bottom: var(--p-space-2, 4px);
+  flex-wrap: wrap;
+}
+
+.prism-track-title {
+  font-family: var(--p-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--p-text);
+  line-height: 1.35;
+}
+
+/* ---------- flag 状态徽章 ---------- */
+.prism-track-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--p-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.prism-track-flag svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.prism-track[data-flag="passed"]  .prism-track-flag { color: var(--p-success-text); background: var(--p-success-bg); }
+.prism-track[data-flag="polish"]  .prism-track-flag { color: var(--p-warning-text); background: var(--p-warning-bg); }
+.prism-track[data-flag="at-risk"] .prism-track-flag { color: var(--p-warning-text); background: var(--p-warning-bg); }
+.prism-track[data-flag="blocked"] .prism-track-flag { color: var(--p-danger-text);  background: var(--p-danger-bg); }
+.prism-track[data-flag="note"]    .prism-track-flag { color: var(--p-info-text);    background: var(--p-info-bg); }
+
+/* ---------- 描述 ---------- */
+.prism-track-desc {
+  font-size: 14.5px;
+  color: var(--p-text-secondary);
+  line-height: 1.6;
+}
+
+/* --- Finding / Observation ---------- */
+
+.prism-finding {
+  margin: var(--p-space-5) 0;
+  padding: 4px 0 4px 22px;
+  border-left: 2px solid var(--p-info);
+}
+
+.prism-finding-title {
+  font-family: var(--p-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--p-text);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.prism-finding-body {
+  font-size: 14.5px;
+  color: var(--p-text-secondary);
+  line-height: 1.65;
+}
+
+/* 没有 title 时,body 升级成主内容 */
+.prism-finding:not(:has(.prism-finding-title)) .prism-finding-body {
+  font-size: 15.5px;
+  color: var(--p-text);
+}
+
+/* detail 区:细线分隔,字色更浅,作为从属说明 */
+.prism-finding-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--p-border);
+  font-size: 13.5px;
+  color: var(--p-text-light);
+  line-height: 1.6;
+}
+
+.prism-finding-detail strong {
+  color: var(--p-text-secondary);
+  font-weight: 600;
+}
+
+/* detail 里嵌入的 prism 组件:重置外边距 */
+.prism-finding-detail > .prism-finding,
+.prism-finding-detail > .prism-evidence,
+.prism-finding-detail > .prism-drift-block,
+.prism-finding-detail > .prism-source,
+.prism-finding-detail > pre {
+  margin: 6px 0 0;
+}

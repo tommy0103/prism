@@ -28,3 +28,8 @@ No props. Content goes in slots.
 - Truth side: white background + accent left border + ✓ icon.
 - Use for "you might think X, but actually Y" patterns common in explainer docs.
 - Unlike `<p-compare>`, this is not about two equal options — it's about correcting a wrong mental model.
+
+## When NOT to use
+
+- If you have 2+ myths in a row, their visual impact collapses. Merge them into a `<ul>` or prose paragraph instead. Myth's power comes from being rare — one per document is ideal, two is the max.
+- If the "misconception" is something nobody would actually think, don't manufacture one just to use the component.

@@ -36,3 +36,8 @@ Neutral concept comparison — same word, different meanings in different contex
 - Use `.context` for the context label (rendered as a mono chip).
 - Use `.meaning` for the explanation. `<em>` inside meaning renders as bold, not italic.
 - Use `<p-compare>` for pro/con (value judgment), `<p-contrast>` for neutral semantic differences.
+
+## When NOT to use
+
+- If the two meanings are obvious from context, a sentence like "note that X means Y here, not Z" is enough.
+- If there are more than 2 contexts to compare for the same term, use a table instead of stacking contrasts.

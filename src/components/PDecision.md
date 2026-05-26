@@ -25,6 +25,11 @@ Decision card with a colored left border and verdict badge indicating status.
 </p-decision>
 ```
 
+## When NOT to use
+
+- If the decision is already obvious from context, write it as prose: "We chose PostgreSQL because..."
+- More than 3 decision cards in one document dilutes their impact. Reserve cards for decisions the reader might disagree with or need to revisit.
+
 ## Notes
 
 - Left border color and verdict badge change based on `status`.

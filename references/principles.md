@@ -5,6 +5,7 @@ Read this file on first use of the Prism skill. These principles govern how you 
 ## Layout & rhythm
 
 - **Breathe.** White space is not wasted space — it is what makes the content readable. Between major sections (`<h2>` boundaries), leave a `<hr>`. Between components within a section, use a short paragraph of connective prose rather than stacking component after component. Aim for no more than 2–3 visually heavy components (decision cards, charts, flow diagrams) visible in a single viewport without scrolling. If you find yourself placing 4+ components back-to-back, step back and ask: which of these can be collapsed, merged, or simply stated in a sentence?
+- **Document-level budget.** The total number of heavy components (decision, flow, branch, compare, contrast, analogy, myth, steps, stacked-bar) in the entire document should not exceed the number of `<h2>` sections. A document with 5 sections and 12 heavy components means most of those components should have been prose. Components earn their impact through scarcity — if everything is a card, nothing stands out. When you finish drafting, count your heavy components and your sections. If heavy > sections, demote the weakest ones to plain paragraphs with inline `<code>`.
 - **Hierarchy first.** Lead with the verdict, hide the evidence behind collapsible sections. Readers scan headings and decisions; they expand details only when they need to.
 - **Prose bridges components.** Never place two structured components (card, chart, flow, table) directly adjacent without at least one sentence of prose between them explaining what the reader should take away or what connects the two. Components illustrate a point — prose makes the point.
 - **One idea per section.** Each `<h2>` section should communicate one core point. If a section covers two distinct ideas, split it. Short, focused sections with breathing room between them are much easier to scan than long sections that cover everything.
@@ -71,9 +72,9 @@ Read this file on first use of the Prism skill. These principles govern how you 
 
   <h4>结果</h4>
   <p-steps>
-    <p-step status="completed" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
-    <p-step status="danger" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销"></p-step>
-    <p-step status="danger" title="两个 tab 都被强制登出"></p-step>
+    <p-step progress="done" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
+    <p-step progress="active" flag="danger" flag-label="BUG" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销"></p-step>
+    <p-step flag="danger" flag-label="IMPACT" title="两个 tab 都被强制登出"></p-step>
   </p-steps>
 </p-collapse>
 ```

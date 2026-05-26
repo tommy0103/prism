@@ -245,9 +245,9 @@
 
       <h4>结果</h4>
       <p-steps>
-        <p-step status="completed" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
-        <p-step status="danger" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
-        <p-step status="danger" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
+        <p-step progress="done" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
+        <p-step progress="active" flag="danger" flag-label="BUG" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
+        <p-step flag="danger" flag-label="IMPACT" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
       </p-steps>
     </p-collapse>
 
@@ -391,10 +391,10 @@ export function isBlocked(jti: string): boolean {
 
     <p>共五个步骤，目前进行到第三步。前两步已合并并在 feature flag 后上线。</p>
 
-    <p-steps>
-      <p-step status="completed" title="添加 JWT 签名/校验工具函数" desc="基于 jose 库实现 sign、verify、decode"></p-step>
-      <p-step status="completed" title="创建 refresh token 数据模型 + 迁移"></p-step>
-      <p-step status="active" title="实现认证中间件"></p-step>
+    <p-steps :progress="50">
+      <p-step progress="done" title="添加 JWT 签名/校验工具函数" desc="基于 jose 库实现 sign、verify、decode"></p-step>
+      <p-step progress="done" title="创建 refresh token 数据模型 + 迁移"></p-step>
+      <p-step progress="active" title="实现认证中间件"></p-step>
       <p-step title="添加 token 刷新端点"></p-step>
       <p-step title="更新客户端 SDK"></p-step>
     </p-steps>
@@ -402,9 +402,9 @@ export function isBlocked(jti: string): boolean {
     <p-collapse title="回滚方案">
       <p>每个步骤的回退操作：</p>
       <p-steps>
-        <p-step status="warning" title="回滚步骤 1: 删除 jwt.ts" desc="rm src/lib/jwt.ts — 无数据变更，直接删除"></p-step>
-        <p-step status="warning" title="回滚步骤 2: 回退 migration" desc="运行 migration down 删除 refresh_tokens 表。无数据损失（表是新增的）"></p-step>
-        <p-step status="danger" title="回滚步骤 3: 恢复旧 auth 中间件" desc="git revert — 需要同步恢复客户端 SDK，否则客户端会发送 JWT 到不认识它的后端"></p-step>
+        <p-step flag="warning" title="回滚步骤 1: 删除 jwt.ts" desc="rm src/lib/jwt.ts — 无数据变更，直接删除"></p-step>
+        <p-step flag="warning" title="回滚步骤 2: 回退 migration" desc="运行 migration down 删除 refresh_tokens 表。无数据损失（表是新增的）"></p-step>
+        <p-step flag="danger" flag-label="BLOCKED" title="回滚步骤 3: 恢复旧 auth 中间件" desc="git revert — 需要同步恢复客户端 SDK，否则客户端会发送 JWT 到不认识它的后端"></p-step>
       </p-steps>
       <p-callout type="danger" icon="⚠">
         <p><strong>不可逆操作：</strong>步骤 2 的 migration 在 30 天后会 drop <code>sessions</code> 表。如果已执行，回滚需要从备份恢复 sessions 数据。</p>

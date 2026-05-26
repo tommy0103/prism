@@ -60,3 +60,8 @@ Architecture flow diagram. Horizontal by default, vertical with `vertical` prop.
 - `filled` fills the entire node with semantic color. Default is border-left only.
 - `type="store"` for databases, `"external"` for external services, `"decision"` for branch points.
 - Arrow `variant="dashed"` for optional, `"async"` for async, `"fail"` for error paths.
+
+## When NOT to use
+
+- If the flow is A → B (two nodes, one arrow), write it as prose: "the client sends a request to the server." A flow diagram with two nodes wastes space.
+- If you have more than 2 flows in one document, consider whether the reader actually needs to see all of them, or if some can be described in words.

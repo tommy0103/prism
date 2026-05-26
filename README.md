@@ -172,7 +172,7 @@ npx http-server . -p 3000
 | `<p-bars> + <p-bar>` | Horizontal bar chart |
 | `<p-stacked-bar>` | Proportional breakdown with legend |
 | `<p-flow> + <p-flow-node> + <p-flow-arrow>` | Architecture flow diagram |
-| `<p-steps> + <p-step>` | Timeline — completed / active / danger / warning |
+| `<p-steps>` + `<p-step>` | Timeline with progress (done/active/todo) + flags (warning/danger/success/info) |
 | `<p-compare>` | Pro/con side-by-side comparison |
 | `<p-card>` | General-purpose container |
 | `<p-code>` | Code block with file path + syntax highlighting |
