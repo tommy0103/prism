@@ -22,39 +22,20 @@ Agents stop reinventing CSS in every artifact — and start writing with **hiera
   <img src=".github/assets/showcase-hero.png" alt="Prism showcase" width="900">
 </p>
 
-<p align="center">
-  ① <b>Floating TOC</b> &nbsp;·&nbsp;
-  ② <b>Decision cards</b> &nbsp;·&nbsp;
-  ③ <b>Side-by-side compare</b> &nbsp;·&nbsp;
-  ④ <b>Source w/ line range</b>
-</p>
-<p align="center"><sub>jump-to nav · verdict + reasoning · structured options · path + copy button</sub></p>
+<p align="center"><i><b>Written by an agent.</b> Every structure above is something markdown cannot do.</i></p>
 
-<p align="center"><sub><b>Written by an agent.</b> Every structure above is something markdown cannot do.</sub></p>
 <p align="center">
-  <a href="https://tommy0103.github.io/prism/references/showcase.html">
-    <b>→ Open the live showcase</b>
-  </a>
-  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <img src=".github/assets/before-after-comparison.png" alt="Same content, different vocabulary" width="900">
+</p>
+
+<p align="center"><i>Same content, different vocabulary. <b>Down:</b> flat markdown. <b>Up:</b> Prism.</i></p>
+
+<p align="center">
+  <a href="https://tommy0103.github.io/prism/references/showcase.html"><b>→ Open the live showcase</b></a>
+  &nbsp;·&nbsp;
   <a href="https://github.com/tommy0103/prism/blob/main/references/showcase.html">View source</a>
 </p>
 
-
-<!-- Before/after -->
-
-<p align="center"><sub><code>◇ &nbsp; Same content. Different output. &nbsp; ◇</code></sub></p>
-
-<p align="center">
-  <img src=".github/assets/before-after-comparison.png" alt="Before/after" width="900">
-</p>
-
-<p align="center">
-  <b>← Without</b> &nbsp; Everything looks the same.
-  &nbsp;&nbsp;&nbsp;
-  <b>With →</b> &nbsp; Structure becomes visible.
-</p>
-
-<p align="center"><sub>Same content. <b>Different vocabulary.</b></sub></p>
 
 ---
 
