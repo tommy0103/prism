@@ -1,0 +1,54 @@
+<!-- lang: zh-CN -->
+<p-decision status="rejected" verdict="P0">
+  <template #title>并发 refresh 导致合法用户 token 家族被撤销</template>
+  <p>影响所有多 tab 用户。两个 tab 同时刷新 token 时，第二个请求被误判为 token 盗用，导致整个 token 家族（包括第一个 tab 刚拿到的新 token）被撤销。</p>
+</p-decision>
+
+<p-collapse title="复现链路">
+  <h4>触发条件</h4>
+  <p>用户在两个浏览器 tab 中同时触发 token 刷新。两个请求携带相同的 refresh token <code>T1 = "dGhpcyBpcyBh..."</code>。</p>
+
+  <h4>Tab A 请求先到达</h4>
+  <p>进入 <p-ref to="bug-rotate-a" label="rotateRefreshToken"></p-ref>，参数 <code>token = "dGhpcyBpcyBh..."</code>：</p>
+
+  <p-source path="src/lib/refresh.ts:8-18" lang="TypeScript" id="bug-rotate-a">
+    <pre><code class="language-typescript">export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  // record = { id: 42, familyId: 7, consumedAt: null }
+  if (!record) throw new AuthError('invalid_refresh');
+  if (record.consumedAt) {                    // null → 跳过
+    await db.refreshToken.revokeFamily(record.familyId);
+    throw new AuthError('token_reuse_detected');
+  }
+  await db.refreshToken.markConsumed(record.id);  // id=42 标记为已消费
+  return issueTokenPair(record.userId);            // 返回新 token 对 T2
+}</code></pre>
+  </p-source>
+
+  <p>Tab A 正常拿到新 token 对 T2。</p>
+
+  <h4>Tab B 请求随后到达（同一个 T1）</h4>
+  <p>再次进入同一函数，参数仍然是 <code>token = "dGhpcyBpcyBh..."</code>：</p>
+
+  <p-source path="src/lib/refresh.ts:8-18（第二次调用）" lang="TypeScript" id="bug-rotate-b">
+    <pre><code class="language-typescript">export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  // record = { id: 42, familyId: 7, consumedAt: "2025-05-24T..." }
+  //                                              ↑ 已被 Tab A 消费
+  if (!record) throw new AuthError('invalid_refresh');
+  if (record.consumedAt) {                    // 不为 null → 进入分支
+    await db.refreshToken.revokeFamily(record.familyId);
+    // familyId=7 的所有 token 被撤销，包括 Tab A 刚拿到的 T2
+    throw new AuthError('token_reuse_detected');   // ← Bug 在这里
+  }
+}</code></pre>
+    <template #note>根本原因：<code>rotateRefreshToken</code> 无法区分合法并发和 token 被盗后重放，对两者执行了相同的撤销逻辑。</template>
+  </p-source>
+
+  <h4>结果</h4>
+  <p-steps>
+    <p-step status="completed" title="Tab A: 拿到新 token T2" desc="正常"></p-step>
+    <p-step status="danger" title="Tab B: 触发 revokeFamily(7)" desc="T2 也被撤销，Tab A 的新 token 失效"></p-step>
+    <p-step status="danger" title="两个 tab 都被强制登出" desc="用户需要重新登录"></p-step>
+  </p-steps>
+</p-collapse>

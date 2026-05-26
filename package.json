@@ -1,5 +1,5 @@
 {
-  "name": "prism-agent-ui",
+  "name": "prism",
   "version": "0.2.0",
   "type": "module",
   "scripts": {
