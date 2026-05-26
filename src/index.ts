@@ -25,6 +25,8 @@ import PKv from './components/PKv.vue'
 import PDivider from './components/PDivider.vue'
 import PGrid from './components/PGrid.vue'
 import PFileList from './components/PFileList.vue'
+import PFileGroup from './components/PFileGroup.vue'
+import PFile from './components/PFile.vue'
 import PChecklist from './components/PChecklist.vue'
 import PCheckItem from './components/PCheckItem.vue'
 import PTabs from './components/PTabs.vue'
@@ -79,6 +81,8 @@ const components: Record<string, Component> = {
   PDivider,
   PGrid,
   PFileList,
+  PFileGroup,
+  PFile,
   PChecklist,
   PCheckItem,
   PTabs,

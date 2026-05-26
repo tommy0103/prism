@@ -20,6 +20,8 @@ const docAliases = {
   PParam: 'PParams',
   PTrack: 'PTracks',
   PTag: 'PBadge',
+  PFile: 'PFileList',
+  PFileGroup: 'PFileList',
 }
 
 let errors = 0

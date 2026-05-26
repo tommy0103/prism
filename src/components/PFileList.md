@@ -1,47 +1,61 @@
-# PFileList
+# PFileList + PFileGroup + PFile
 
-Impact map showing affected files grouped by module, each tagged with a change type.
+Impact map showing affected files grouped by module. Slot-based API — compose `<p-file-group>` and `<p-file>` children.
 
-## Props
+## PFileList
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `groups` | `Array<{ module: string, files: Array<{ path: string, change: string }> }>` | — | File groups. Use `:groups` for binding. |
+Container, no props. Wraps `<p-file-group>` or flat `<p-file>` children.
+
+## PFileGroup Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `module` | `string` | Yes | Module/directory name shown in header |
+
+Auto-computed from children:
+- File count badge
+- Status legend (shows which diff statuses appear in this group)
+
+## PFile Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `string` | Yes | File path |
+| `status` | `'added' \| 'modified' \| 'deleted'` | No | Diff status — controls left color bar |
+| `purpose` | `string` | No | What changed in this file (also via default slot) |
 
 ## Example
 
 ```html
-<p-file-list :groups="[
-  {
-    module: 'src/middleware',
-    files: [
-      { path: 'auth.ts', change: '修改' },
-      { path: 'rate-limit.ts', change: '修改' }
-    ]
-  },
-  {
-    module: 'src/lib',
-    files: [
-      { path: 'jwt.ts', change: '新增' },
-      { path: 'refresh.ts', change: '新增' },
-      { path: 'blocklist.ts', change: '新增' }
-    ]
-  },
-  {
-    module: 'src/routes',
-    files: [
-      { path: 'auth.ts', change: '签名变更' }
-    ]
-  }
-]"></p-file-list>
+<p-file-list>
+  <p-file-group module="src/events">
+    <p-file path="event-store.ts" status="added" purpose="Event append + concurrency control"></p-file>
+    <p-file path="domain-events.ts" status="added"></p-file>
+    <p-file path="event-bus.ts" status="added"></p-file>
+  </p-file-group>
+  <p-file-group module="src/routes">
+    <p-file path="orders.ts" status="modified" purpose="Response shape changed to { eventId, version }"></p-file>
+    <p-file path="health.ts" status="modified"></p-file>
+  </p-file-group>
+</p-file-list>
 ```
+
+### Flat (no groups)
+
+```html
+<p-file-list>
+  <p-file path="package.json" status="modified"></p-file>
+  <p-file path="tsconfig.json" status="modified"></p-file>
+</p-file-list>
+```
+
+## When NOT to use
+
+- If there are only 1–2 changed files, mention them inline: "this changes `auth.ts` and `rate-limit.ts`."
+- For large diffs (50+ files), consider grouping by change type instead of by module, or collapsing the whole list.
 
 ## Notes
 
-- Change tags are auto-colored by keyword:
-  - Green: `新增` / `added`
-  - Yellow: `修改` / `modified`
-  - Red: `签名变更` / `breaking`, `删除` / `removed`
-  - Blue: `仅 import` / `import-only`
-- Use `:groups` (with colon) for the array binding.
-- Use single quotes for string values inside the bound attribute.
+- `status` colors: `added` = green bar, `modified` = yellow bar, `deleted` = red bar + strikethrough path. No status = no bar.
+- `purpose` (or default slot) adds a description line below the path — use for non-obvious changes.
+- PFileGroup auto-counts files and shows a status legend badge in the header.

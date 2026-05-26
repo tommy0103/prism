@@ -1671,76 +1671,158 @@ pre:hover .prism-copy-btn {
 
 /* --- File List -------------------------------------------- */
 
+/* --- File List (v2) ---------- */
+
 .prism-file-list {
-  gap: var(--p-space-5);
-  margin-bottom: var(--p-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-4);
+  margin: var(--p-space-5) 0;
 }
 
+/* ---------- Group(可选分组容器) ---------- */
 .prism-file-group {
   border: 1px solid var(--p-border);
-  border-radius: var(--p-radius);
+  border-radius: var(--p-radius-lg);
   overflow: hidden;
+  background: var(--p-bg);
 }
 
 .prism-file-group-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  padding: var(--p-space-3) var(--p-space-4);
-  background: var(--p-bg-secondary);
+  padding: 10px 16px;
   border-bottom: 1px solid var(--p-border);
+  gap: 16px;
 }
 
 .prism-file-group-name {
+  font-family: var(--p-font-mono);
+  font-size: 13px;
   font-weight: 600;
-  font-size: 14px;
-  font-family: var(--p-font-mono);
+  color: var(--p-text);
 }
 
+.prism-file-group-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+/* ---------- Legend ---------- */
+.prism-file-group-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: var(--p-font-mono);
+  font-size: 10px;
+  color: var(--p-text-light);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.prism-file-group-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.prism-file-group-legend-bar {
+  display: inline-block;
+  width: 3px;
+  height: 11px;
+  border-radius: 1px;
+}
+
+.prism-file-group-legend-item.is-added    .prism-file-group-legend-bar { background: var(--p-success); }
+.prism-file-group-legend-item.is-modified .prism-file-group-legend-bar { background: var(--p-warning); }
+.prism-file-group-legend-item.is-deleted  .prism-file-group-legend-bar { background: var(--p-danger); }
+
+/* ---------- Count ---------- */
 .prism-file-group-count {
-  font-size: 13px;
-  color: var(--p-text-light);
-}
-
-.prism-file-item {
-  padding: var(--p-space-2) var(--p-space-4);
-  border-bottom: 1px solid var(--p-border);
-  font-size: 14px;
-  gap: var(--p-space-3);
-  border-left: 3px solid transparent;
-}
-
-.prism-file-item:last-child {
-  border-bottom: none;
-}
-
-.prism-file-path {
   font-family: var(--p-font-mono);
-  font-size: 13px;
-  color: var(--p-text-secondary);
-}
-
-.prism-file-change {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--p-text-light);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.prism-file-added    { border-left-color: var(--p-success); }
-.prism-file-added .prism-file-change { color: var(--p-success-text); }
+/* ---------- Files 容器 ---------- */
+.prism-file-group-files {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-.prism-file-modified { border-left-color: var(--p-warning); }
-.prism-file-modified .prism-file-change { color: var(--p-warning-text); }
+/* ---------- 单个 File ---------- */
+.prism-file-item {
+  display: grid;
+  grid-template-columns: 3px 1fr;
+  gap: 14px;
+  padding: 10px 16px 10px 0;
+}
 
-.prism-file-breaking { border-left-color: var(--p-danger); }
-.prism-file-breaking .prism-file-change { color: var(--p-danger-text); }
+.prism-file-item + .prism-file-item {
+  border-top: 1px solid var(--p-border);
+}
 
-.prism-file-removed  { border-left-color: var(--p-danger); }
-.prism-file-removed .prism-file-change { color: var(--p-danger-text); }
-.prism-file-removed .prism-file-path { text-decoration: line-through; }
+.prism-file-item-bar {
+  background: var(--p-border-strong);
+}
 
-.prism-file-minor    { border-left-color: var(--p-border-strong); }
-.prism-file-minor .prism-file-change { color: var(--p-text-light); }
+.prism-file-item.prism-file-added    .prism-file-item-bar { background: var(--p-success); }
+.prism-file-item.prism-file-modified .prism-file-item-bar { background: var(--p-warning); }
+.prism-file-item.prism-file-deleted  .prism-file-item-bar { background: var(--p-danger); }
+
+/* 无 status 时,左侧色条用 border-strong 作为占位 */
+/* (上面 .prism-file-item-bar 默认就是 border-strong) */
+
+.prism-file-item-body {
+  min-width: 0;
+}
+
+.prism-file-item-path {
+  font-family: var(--p-font-mono);
+  font-size: 13px;
+  color: var(--p-text);
+  font-weight: 500;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.prism-file-item.prism-file-deleted .prism-file-item-path {
+  color: var(--p-text-light);
+  text-decoration: line-through;
+}
+
+.prism-file-item-purpose {
+  font-size: 13.5px;
+  color: var(--p-text-secondary);
+  line-height: 1.6;
+  margin-top: 3px;
+}
+
+/* ---------- 扁平模式:PFile 直接放在 PFileList 里(无 group) ---------- */
+.prism-file-list > .prism-file-item:first-child {
+  border-top: 1px solid var(--p-border);
+}
+.prism-file-list > .prism-file-item {
+  border-left: 1px solid var(--p-border);
+  border-right: 1px solid var(--p-border);
+  padding: 10px 16px 10px 0;
+}
+.prism-file-list > .prism-file-item:last-child {
+  border-bottom: 1px solid var(--p-border);
+  border-radius: 0 0 var(--p-radius-lg) var(--p-radius-lg);
+}
+.prism-file-list > .prism-file-item:first-child {
+  border-radius: var(--p-radius-lg) var(--p-radius-lg) 0 0;
+}
 
 /* --- Contrast --------------------------------------------- */
 

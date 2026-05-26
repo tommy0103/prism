@@ -420,32 +420,23 @@ export function isBlocked(jti: string): boolean {
     <p>本次迁移涉及 3 个模块、共 9 个文件。</p>
 
     <p-collapse title="文件变更明细">
-      <p-file-list :groups="[
-        {
-          module: 'src/middleware',
-          files: [
-            { path: 'auth.ts', change: '修改' },
-            { path: 'rate-limit.ts', change: '修改' },
-            { path: 'cors.ts', change: '仅 import' }
-          ]
-        },
-        {
-          module: 'src/lib',
-          files: [
-            { path: 'jwt.ts', change: '新增' },
-            { path: 'refresh.ts', change: '新增' },
-            { path: 'blocklist.ts', change: '新增' }
-          ]
-        },
-        {
-          module: 'src/routes',
-          files: [
-            { path: 'auth.ts', change: '签名变更' },
-            { path: 'index.ts', change: '仅 import' },
-            { path: 'health.ts', change: '仅 import' }
-          ]
-        }
-      ]"></p-file-list>
+      <p-file-list>
+        <p-file-group module="src/middleware">
+          <p-file path="auth.ts" status="modified" purpose="JWT 校验逻辑替换 session 查询"></p-file>
+          <p-file path="rate-limit.ts" status="modified"></p-file>
+          <p-file path="cors.ts" status="modified"></p-file>
+        </p-file-group>
+        <p-file-group module="src/lib">
+          <p-file path="jwt.ts" status="added" purpose="sign / verify / decode"></p-file>
+          <p-file path="refresh.ts" status="added" purpose="refresh token 轮换"></p-file>
+          <p-file path="blocklist.ts" status="added" purpose="token 黑名单"></p-file>
+        </p-file-group>
+        <p-file-group module="src/routes">
+          <p-file path="auth.ts" status="modified" purpose="响应结构变更"></p-file>
+          <p-file path="index.ts" status="modified"></p-file>
+          <p-file path="health.ts" status="modified"></p-file>
+        </p-file-group>
+      </p-file-list>
     </p-collapse>
 
     <hr>

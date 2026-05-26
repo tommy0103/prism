@@ -71,62 +71,62 @@ For detailed props, slots, and examples, read the `.md` file next to each compon
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-decision>` | Decision card with status + verdict | `PDecision.md` |
-| `<p-collapse>` | Collapsible section, accordion groups | `PCollapse.md` |
-| `<p-source>` | Expandable code reference block (exempt from budget) | `PSource.md` |
-| `<p-ref>` | Inline reference chip linking to a source (exempt from budget) | `PRef.md` |
-| `<p-code>` | Code block with file header + syntax highlighting | `PCode.md` |
-| `<p-steps>` + `<p-step>` | Timeline with progress + flags | `PStep.md` |
-| `<p-badge>` + `<p-tag>` | Status badge / monospace label | `PBadge.md` |
-| `<p-kv>` | Key-value pairs | `PKv.md` |
+| `<p-decision>` | Decision card (`status="approved\|rejected\|exploring\|pending"` `verdict="..."`) | `PDecision.md` |
+| `<p-collapse>` | Collapsible section (`title="..."` `open` `borderless`) | `PCollapse.md` |
+| `<p-source>` | Expandable code ref (`path="file:L-L"` `lang="..."` `id="..."`) — exempt from budget | `PSource.md` |
+| `<p-ref>` | Inline ref chip (`to="id"` `label="..."`) — exempt from budget | `PRef.md` |
+| `<p-code>` | Code block with header (`file="..."`) | `PCode.md` |
+| `<p-steps>` + `<p-step>` | Timeline (`progress="done\|active\|todo"` `flag="warning\|danger\|success\|info"` `flag-label="..."`) | `PStep.md` |
+| `<p-badge>` + `<p-tag>` | Status badge (`color="success\|warning\|danger\|info\|accent\|purple"`) | `PBadge.md` |
+| `<p-kv>` | Key-value pairs (`:items="[{ key, value }]"`) | `PKv.md` |
 
 ### Judgment & comparison — when evaluating options or correcting assumptions
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-compare>` | Pro/con side-by-side (value judgment) | `PCompare.md` |
-| `<p-contrast>` | Same word, different contexts (neutral) | `PContrast.md` |
-| `<p-myth>` | Misconception → correction | `PMyth.md` |
-| `<p-analogy>` | Familiar concept ≈ unfamiliar concept | `PAnalogy.md` |
+| `<p-compare>` | Pro/con side-by-side (`#pro` `#con` slots) | `PCompare.md` |
+| `<p-contrast>` | Same word, different contexts (`word="..."` `desc="..."` `#left` `#right`) | `PContrast.md` |
+| `<p-myth>` | Misconception → correction (`#myth` `#truth` slots) | `PMyth.md` |
+| `<p-analogy>` | A ≈ B (`source="..."` `target="..."` `because="..."`) | `PAnalogy.md` |
 
 ### Flow & structure — when showing how things connect or branch
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-flow>` + `<p-flow-node>` + `<p-flow-arrow>` | Architecture flow diagram | `PFlow.md` |
-| `<p-branch>` + `<p-branch-item>` | Decision tree / conditional branching | `PBranch.md` |
-| `<p-term>` | Inline term definition (hover tooltip) | `PTerm.md` |
+| `<p-flow>` + `<p-flow-node>` + `<p-flow-arrow>` | Flow diagram (`vertical` `plain`; node: `color` `meta` `subtitle` `type`; arrow: `label` `variant`) | `PFlow.md` |
+| `<p-branch>` + `<p-branch-item>` | Decision tree (`root="..."` `cond="..."` `outcome="..."` `status="leaf\|danger\|success"`) | `PBranch.md` |
+| `<p-term>` | Inline term tooltip (`word="..."` `def="..."` `first`) | `PTerm.md` |
 
 ### Data & metrics — when numbers matter for the decision
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-metrics>` + `<p-metric>` | Key numbers dashboard | `PMetric.md` |
-| `<p-bars>` + `<p-bar>` | Horizontal bar chart | `PBar.md` |
-| `<p-stacked-bar>` | Proportional breakdown | `PStackedBar.md` |
+| `<p-metrics>` + `<p-metric>` | Key numbers (`value="..."` `label="..."` `delta="..."` `delta-dir="up\|down"`) | `PMetric.md` |
+| `<p-bars>` + `<p-bar>` | Bar chart (`label="..."` `value="..."` `:percent="N"` `color="..."`) | `PBar.md` |
+| `<p-stacked-bar>` | Proportional breakdown (`:segments="[{percent,color}]"` `:legend="[{label,color}]"`) | `PStackedBar.md` |
 
 ### Assessment & review — when auditing multiple dimensions
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-tracks>` + `<p-track>` | Parallel evaluation tracks | `PTracks.md` |
-| `<p-finding>` | Observation within a track | `PFinding.md` |
-| `<p-evidence>` + `<p-evidence-item>` | Conclusion supported by evidence items | `PEvidence.md` |
-| `<p-checklist>` + `<p-check-item>` | Test coverage checklist | `PChecklist.md` |
-| `<p-file-list>` | File impact map by module | `PFileList.md` |
+| `<p-tracks>` + `<p-track>` | Parallel tracks (`title="..."` `flag="passed\|polish\|at-risk\|blocked\|note"` `flag-label="..."`) | `PTracks.md` |
+| `<p-finding>` | Observation in a track (`title="..."` `#detail` slot) | `PFinding.md` |
+| `<p-evidence>` + `<p-evidence-item>` | Conclusion + evidence (`conclusion="..."` or `#conclusion` slot) | `PEvidence.md` |
+| `<p-checklist>` + `<p-check-item>` | Coverage checklist (`checked` boolean) | `PChecklist.md` |
+| `<p-file-list>` + `<p-file-group>` + `<p-file>` | File impact map (`module="..."` `path="..."` `status="added\|modified\|deleted"` `purpose="..."`) | `PFileList.md` |
 
 ### Layout & interaction — structural containers
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-grid>` | Responsive column layout | `PGrid.md` |
-| `<p-card>` | General-purpose container | `PCard.md` |
-| `<p-callout>` | Interruption block (use sparingly) | `PCallout.md` |
-| `<p-divider>` | Section divider | `PDivider.md` |
-| `<p-tabs>` + `<p-tab>` | Section-level tab switcher | `PTabs.md` |
-| `<p-pages>` + `<p-page>` | Document-level multi-page | `PPages.md` |
-| `<p-copy>` | Copy-to-clipboard button | `PCopy.md` |
-| `<p-params>` + `<p-param>` | Interactive parameter panel | `PParams.md` |
+| `<p-grid>` | Column layout (`:cols="2\|3\|4"`) | `PGrid.md` |
+| `<p-card>` | Container (`title="..."` `#header` `#footer` slots) | `PCard.md` |
+| `<p-callout>` | Interruption block (`type="info\|success\|warning\|danger\|purple"` `icon="..."`) — use sparingly | `PCallout.md` |
+| `<p-divider>` | Section divider (`label="..."`) | `PDivider.md` |
+| `<p-tabs>` + `<p-tab>` | Section-level tabs (`title="..."`) | `PTabs.md` |
+| `<p-pages>` + `<p-page>` | Document-level multi-page (`title="..."`) | `PPages.md` |
+| `<p-copy>` | Copy button (`:content="..."` `label="..."`) | `PCopy.md` |
+| `<p-params>` + `<p-param>` | Interactive params (`name="..."` `type="range\|select\|toggle"` `:min` `:max` `:step` `options="..."`) | `PParams.md` |
 
 ## Theming
 

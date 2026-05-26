@@ -191,7 +191,7 @@ npx http-server . -p 3000
 | `<p-kv>` | Key-value pair list |
 | `<p-divider>` | Section divider, optionally with label |
 | `<p-grid>` | Responsive 2/3/4 column layout |
-| `<p-file-list>` | File impact map grouped by module |
+| `<p-file-list>` + `<p-file-group>` + `<p-file>` | File impact map grouped by module |
 | `<p-checklist> + <p-check-item>` | Test coverage checklist |
 | `<p-tabs> + <p-tab>` | Section-level tab switcher |
 | `<p-pages> + <p-page>` | Document-level multi-page (single file) |
@@ -287,7 +287,7 @@ prism/
 │   ├── showcase.html         # Every component demoed
 │   └── example-vue.html      # Minimal example
 ├── src/
-│   ├── components/           # 45 Vue SFCs + 31 .md docs
+│   ├── components/           # 47 Vue SFCs + 31 .md docs
 │   ├── styles/
 │   │   ├── base.css          # Structural — don't touch
 │   │   └── themes/notion.css # Visual — swappable
