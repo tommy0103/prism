@@ -18,17 +18,23 @@ Teach agents to write with hierarchy, evidence, and structure, then render it as
 
 </div>
 
-<p align="center">
-  <img src=".github/assets/showcase-hero.png" alt="Prism showcase" width="900">
-</p>
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src=".github/assets/showcase-hero.png" alt="Prism showcase">
+      <br>
+      <i><b>This is what an agent writes</b>
+      <br>— with hierarchy, evidence, and structure built in.</i>
+    </td>
+    <td width="50%" align="center">
+      <img src=".github/assets/before-after-comparison.png" alt="Same content, different vocabulary">
+      <br>
+      <i>What an agent writes when it only has markdown.</i>
+    </td>
+  </tr>
+</table>
 
-<p align="center"><i><b>Written by an agent.</b> Every structure above is something markdown cannot do.</i></p>
-
-<p align="center">
-  <img src=".github/assets/before-after-comparison.png" alt="Same content, different vocabulary" width="900">
-</p>
-
-<p align="center"><i>Same content, different vocabulary. <b>Down:</b> flat markdown. <b>Up:</b> Prism.</i></p>
+<p align="center"><i>Same content, different vocabulary.</p>
 
 <p align="center">
   <a href="https://tommy0103.github.io/prism/references/showcase.html"><b>→ Open the live showcase</b></a>
@@ -149,6 +155,7 @@ npx http-server . -p 3000
 | Family | Components |
 |--------|-----------|
 | **Decisions** | `<p-decision>` · `<p-callout>` |
+| **Reasoning** | `<p-finding> · <p-evidence> · <p-tracks>`|
 | **Structure** | `<p-collapse>` · `<p-collapse-group>` · `<p-tabs>` · `<p-pages>` · `<p-divider>` · `<p-grid>` ...|
 | **Source code** | `<p-source>` · `<p-ref>` · `<p-code>` · `<p-copy>` |
 | **Data** | `<p-metrics>` · `<p-bars>` · `<p-stacked-bar>` |
@@ -204,7 +211,7 @@ Standard HTML (`<h1>`–`<h4>`, `<p>`, `<hr>`, `<table>`, `<code>`) is auto-styl
 
 ## Future directions
 
-Prism is intentionally small today — 34 components, one Notion-inspired theme,
+Prism is intentionally small today — 45 components, one Notion-inspired theme,
 one build path. The plan is to grow the **vocabulary**, not the surface area.
 
 - **More themes** — Linear-style, brutalist, editorial, terminal-dark. The

@@ -169,6 +169,22 @@ for (let i = 0; i < topLines.length; i++) {
   }
 }
 
+// --- Source path vs code line count mismatch ---
+
+const sourceBlockPattern = /<p-source[^>]*path="([^"]*)"[^>]*>[\s\S]*?<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>[\s\S]*?<\/p-source>/g
+while ((m = sourceBlockPattern.exec(src)) !== null) {
+  const path = m[1]
+  const code = m[2]
+  const rangeMatch = path.match(/:(\d+)-(\d+)/)
+  if (rangeMatch) {
+    const declaredLines = parseInt(rangeMatch[2]) - parseInt(rangeMatch[1]) + 1
+    const actualLines = code.split('\n').filter(l => l.trim() !== '').length
+    if (actualLines < declaredLines * 0.5) {
+      warn(`<p-source path="${path}"> declares ${declaredLines} lines but code block has ~${actualLines} lines. Show the full range or adjust the path.`)
+    }
+  }
+}
+
 // --- Summary ---
 
 console.log(`\n${'─'.repeat(40)}`)
