@@ -47,3 +47,4 @@ Inline ref chip in running text, linking to a source block:
 - Place source blocks close to where they are referenced, not in a separate section at the end.
 - Multiple ref chips can point to the same source block.
 - Always show real code, never paraphrase code in prose.
+- **One continuous range per source block.** Use `path="file.ts:18-70"`, not `path="file.ts:18-70,79-100"`. If you need to show two non-contiguous code segments, use two separate `<p-source>` blocks. The line number display starts from the first number in the path — multi-range paths will show incorrect line numbers for the second segment.

@@ -67,37 +67,66 @@ Read `references/principles.md` for the full version with examples. Key rules:
 
 For detailed props, slots, and examples, read the `.md` file next to each component in `src/components/`.
 
+### Core — use in almost every document
+
 | Component | Description | Docs |
 |-----------|-------------|------|
-| `<p-decision>` | Decision card with status + verdict | `src/components/PDecision.md` |
-| `<p-callout>` | Info/success/warning/danger/purple callout | `src/components/PCallout.md` |
-| `<p-collapse>` | Collapsible section, accordion groups | `src/components/PCollapse.md` |
-| `<p-source>` + `<p-ref>` | Expandable code reference + inline link | `src/components/PSource.md` |
-| `<p-metrics>` + `<p-metric>` | Key numbers dashboard | `src/components/PMetric.md` |
-| `<p-bars>` + `<p-bar>` | Horizontal bar chart | `src/components/PBar.md` |
-| `<p-stacked-bar>` | Proportional breakdown | `src/components/PStackedBar.md` |
-| `<p-flow>` + `<p-flow-node>` + `<p-flow-arrow>` | Architecture flow diagram | `src/components/PFlow.md` |
-| `<p-steps>` + `<p-step>` | Timeline with progress states | `src/components/PStep.md` |
-| `<p-compare>` | Pro/con side-by-side | `src/components/PCompare.md` |
-| `<p-card>` | General-purpose container | `src/components/PCard.md` |
-| `<p-code>` | Code block with file header + syntax highlighting | `src/components/PCode.md` |
-| `<p-badge>` + `<p-tag>` | Status badge / monospace label | `src/components/PBadge.md` |
-| `<p-kv>` | Key-value pairs | `src/components/PKv.md` |
-| `<p-divider>` | Section divider | `src/components/PDivider.md` |
-| `<p-grid>` | Responsive column layout | `src/components/PGrid.md` |
-| `<p-file-list>` | File impact map by module | `src/components/PFileList.md` |
-| `<p-checklist>` + `<p-check-item>` | Test coverage checklist | `src/components/PChecklist.md` |
-| `<p-tabs>` + `<p-tab>` | Section-level tab switcher | `src/components/PTabs.md` |
-| `<p-pages>` + `<p-page>` | Document-level multi-page | `src/components/PPages.md` |
-| `<p-copy>` | Copy-to-clipboard button | `src/components/PCopy.md` |
-| `<p-params>` + `<p-param>` | Interactive parameter panel | `src/components/PParams.md` |
-| `<p-contrast>` | Neutral concept comparison (same word, different contexts) | `src/components/PContrast.md` |
-| `<p-branch>` + `<p-branch-item>` | Decision tree / branching flow | `src/components/PBranch.md` |
-| `<p-term>` | Inline term definition (hover tooltip) | `src/components/PTerm.md` |
-| `<p-myth>` | Misconception → correction | `src/components/PMyth.md` |
-| `<p-analogy>` | Analogy mapping (A ≈ B, because C) | `src/components/PAnalogy.md` |
-| `<p-tracks>` + `<p-track>` | Parallel evaluation tracks (not sequential) | `src/components/PTracks.md` |
-| `<p-finding>` | Observation within a track, with optional detail | `src/components/PFinding.md` |
+| `<p-decision>` | Decision card with status + verdict | `PDecision.md` |
+| `<p-collapse>` | Collapsible section, accordion groups | `PCollapse.md` |
+| `<p-source>` | Expandable code reference block (exempt from budget) | `PSource.md` |
+| `<p-ref>` | Inline reference chip linking to a source (exempt from budget) | `PRef.md` |
+| `<p-code>` | Code block with file header + syntax highlighting | `PCode.md` |
+| `<p-steps>` + `<p-step>` | Timeline with progress + flags | `PStep.md` |
+| `<p-badge>` + `<p-tag>` | Status badge / monospace label | `PBadge.md` |
+| `<p-kv>` | Key-value pairs | `PKv.md` |
+
+### Judgment & comparison — when evaluating options or correcting assumptions
+
+| Component | Description | Docs |
+|-----------|-------------|------|
+| `<p-compare>` | Pro/con side-by-side (value judgment) | `PCompare.md` |
+| `<p-contrast>` | Same word, different contexts (neutral) | `PContrast.md` |
+| `<p-myth>` | Misconception → correction | `PMyth.md` |
+| `<p-analogy>` | Familiar concept ≈ unfamiliar concept | `PAnalogy.md` |
+
+### Flow & structure — when showing how things connect or branch
+
+| Component | Description | Docs |
+|-----------|-------------|------|
+| `<p-flow>` + `<p-flow-node>` + `<p-flow-arrow>` | Architecture flow diagram | `PFlow.md` |
+| `<p-branch>` + `<p-branch-item>` | Decision tree / conditional branching | `PBranch.md` |
+| `<p-term>` | Inline term definition (hover tooltip) | `PTerm.md` |
+
+### Data & metrics — when numbers matter for the decision
+
+| Component | Description | Docs |
+|-----------|-------------|------|
+| `<p-metrics>` + `<p-metric>` | Key numbers dashboard | `PMetric.md` |
+| `<p-bars>` + `<p-bar>` | Horizontal bar chart | `PBar.md` |
+| `<p-stacked-bar>` | Proportional breakdown | `PStackedBar.md` |
+
+### Assessment & review — when auditing multiple dimensions
+
+| Component | Description | Docs |
+|-----------|-------------|------|
+| `<p-tracks>` + `<p-track>` | Parallel evaluation tracks | `PTracks.md` |
+| `<p-finding>` | Observation within a track | `PFinding.md` |
+| `<p-evidence>` + `<p-evidence-item>` | Conclusion supported by evidence items | `PEvidence.md` |
+| `<p-checklist>` + `<p-check-item>` | Test coverage checklist | `PChecklist.md` |
+| `<p-file-list>` | File impact map by module | `PFileList.md` |
+
+### Layout & interaction — structural containers
+
+| Component | Description | Docs |
+|-----------|-------------|------|
+| `<p-grid>` | Responsive column layout | `PGrid.md` |
+| `<p-card>` | General-purpose container | `PCard.md` |
+| `<p-callout>` | Interruption block (use sparingly) | `PCallout.md` |
+| `<p-divider>` | Section divider | `PDivider.md` |
+| `<p-tabs>` + `<p-tab>` | Section-level tab switcher | `PTabs.md` |
+| `<p-pages>` + `<p-page>` | Document-level multi-page | `PPages.md` |
+| `<p-copy>` | Copy-to-clipboard button | `PCopy.md` |
+| `<p-params>` + `<p-param>` | Interactive parameter panel | `PParams.md` |
 
 ## Theming
 

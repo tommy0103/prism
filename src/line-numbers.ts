@@ -1,5 +1,5 @@
 export function parseLineRange(path: string): number {
-  const match = path.match(/:(\d+)(?:-\d+)?(?:\s|$)/)
+  const match = path.match(/:(\d+)/)
   return match ? parseInt(match[1], 10) : 1
 }
 

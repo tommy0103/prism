@@ -7,9 +7,9 @@
 
 # Prism
 
-### A design system for AI-generated documents.
+### A semantic document DSL for AI agents.
 
-Agents stop reinventing CSS in every artifact — and start writing with **hierarchy, emphasis, and structure** built in.
+Teach agents to write with hierarchy, evidence, and structure, then render it as self-contained HTML.
 
 [![stars](https://img.shields.io/github/stars/tommy0103/prism?style=flat-square)](https://github.com/tommy0103/prism/stargazers)
 [![version](https://img.shields.io/github/v/tag/tommy0103/prism?label=version&style=flat-square)](https://github.com/tommy0103/prism/releases)
@@ -140,7 +140,7 @@ npx http-server . -p 3000
 
 ## What's in the box
 
-**34 components, 8 families.** Each one ships with a .md doc in src/components/ explaining when (and when not) to use it.
+**45 components, 8 families.** Each one ships with a .md doc in src/components/ explaining when (and when not) to use it.
 
 <p align="center">
   <img src=".github/assets/components-grid.png" alt="Prism components" width="900">
@@ -149,7 +149,7 @@ npx http-server . -p 3000
 | Family | Components |
 |--------|-----------|
 | **Decisions** | `<p-decision>` · `<p-callout>` |
-| **Structure** | `<p-collapse>` · `<p-collapse-group>` · `<p-tabs>` · `<p-pages>` · `<p-divider>` · `<p-grid>` |
+| **Structure** | `<p-collapse>` · `<p-collapse-group>` · `<p-tabs>` · `<p-pages>` · `<p-divider>` · `<p-grid>` ...|
 | **Source code** | `<p-source>` · `<p-ref>` · `<p-code>` · `<p-copy>` |
 | **Data** | `<p-metrics>` · `<p-bars>` · `<p-stacked-bar>` |
 | **Process** | `<p-flow>` · `<p-steps>` · `<p-compare>` |
@@ -188,6 +188,7 @@ npx http-server . -p 3000
 | `<p-params> + <p-param>` | Interactive parameter panel |
 | `<p-tracks> + <p-track>` | Parallel evaluation tracks with lane colors + flags |
 | `<p-finding>` | Observation/result within a track, with optional detail |
+| `<p-evidence>` + `<p-evidence-item>` | Conclusion supported by multiple evidence items |
 
 Standard HTML (`<h1>`–`<h4>`, `<p>`, `<hr>`, `<table>`, `<code>`) is auto-styled.
 
@@ -275,7 +276,7 @@ prism/
 │   ├── showcase.html         # Every component demoed
 │   └── example-vue.html      # Minimal example
 ├── src/
-│   ├── components/           # 43 Vue SFCs + 29 .md docs
+│   ├── components/           # 45 Vue SFCs + 31 .md docs
 │   ├── styles/
 │   │   ├── base.css          # Structural — don't touch
 │   │   └── themes/notion.css # Visual — swappable

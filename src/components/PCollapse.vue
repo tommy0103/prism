@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   title: string
@@ -22,11 +22,18 @@ const detailsRef = ref<HTMLDetailsElement>()
 const bodyRef = ref<HTMLElement>()
 const isOpen = ref(props.open ?? false)
 
+function openFromRef() { if (!isOpen.value) toggle() }
+
 onMounted(() => {
   if (isOpen.value && detailsRef.value) {
     detailsRef.value.open = true
     if (bodyRef.value) bodyRef.value.style.gridTemplateRows = '1fr'
   }
+  detailsRef.value?.addEventListener('prism-ref-open', openFromRef)
+})
+
+onUnmounted(() => {
+  detailsRef.value?.removeEventListener('prism-ref-open', openFromRef)
 })
 
 function toggle() {

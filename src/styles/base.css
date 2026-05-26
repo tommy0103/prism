@@ -311,6 +311,13 @@
   align-items: center;
 }
 
+/* --- Evidence --------------------------------------------- */
+
+.prism-evidence-items {
+  display: flex;
+  flex-direction: column;
+}
+
 .prism-finding-detail {
   display: block;
 }

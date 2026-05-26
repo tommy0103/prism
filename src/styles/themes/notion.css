@@ -1501,40 +1501,38 @@ pre:hover .prism-copy-btn {
   position: absolute;
   font-family: var(--p-font-mono);
   font-size: 11px;
-  color: var(--p-text-secondary);
-  background: var(--p-bg);
-  padding: 2px 6px;
-  border-radius: 3px;
+  color: var(--p-text-light);
   letter-spacing: -0.01em;
   line-height: 1.3;
-  box-shadow: var(--p-shadow-sm);
   pointer-events: none;
   max-width: 96px;
   text-align: center;
   white-space: normal;
   width: max-content;
 }
-.prism-flow-label.terse { white-space: nowrap; }
+.prism-flow-label.terse {
+  white-space: nowrap;
+}
 
+/* 横向 label:挂箭头下方 */
 .prism-flow:not(.vertical) .prism-flow-label {
   left: 50%;
   top: calc(100% + 4px);
   transform: translateX(-50%);
 }
+/* 纵向 label:挂箭头右侧 */
 .prism-flow.vertical .prism-flow-label {
   left: calc(100% + 6px);
   top: 50%;
   transform: translateY(-50%);
 }
+/* 窄容器 container query:label 切右侧 */
 @container prism-flow (max-width: 480px) {
   .prism-flow:not(.no-stack):not(.vertical) .prism-flow-label {
     left: calc(100% + 6px);
     top: 50%;
     transform: translateY(-50%);
   }
-}
-.prism-flow.plain .prism-flow-label {
-  background: var(--p-bg-secondary);
 }
 
 /* --- Grid Layout ------------------------------------------ */
@@ -2277,4 +2275,88 @@ pre:hover .prism-copy-btn {
 .prism-finding-detail > .prism-source,
 .prism-finding-detail > pre {
   margin: 6px 0 0;
+}
+
+/* --- Evidence Cluster ---------- */
+
+.prism-evidence {
+  margin: var(--p-space-5) 0;
+}
+
+/* 结论:蓝 ◆ 前缀 + serif 16px 加粗 */
+.prism-evidence-conclusion {
+  font-family: var(--p-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--p-text);
+  line-height: 1.4;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.prism-evidence-conclusion::before {
+  content: '◆';
+  color: var(--p-accent);
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1.4;
+  transform: translateY(-1px);
+}
+
+/* 证据列表:顶部细线分隔 + 自动编号 */
+.prism-evidence-items {
+  border-top: 1px solid var(--p-border);
+  padding-top: 8px;
+  counter-reset: pe-item;
+}
+
+/* 单条证据 */
+.prism-evidence-item {
+  position: relative;
+  padding: 5px 0 5px 28px;
+  font-size: 14px;
+  color: var(--p-text);
+  line-height: 1.6;
+  counter-increment: pe-item;
+}
+
+/* mono 编号(tabular-nums 保证两位数纵向对齐) */
+.prism-evidence-item::before {
+  content: counter(pe-item, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 6px;
+  font-family: var(--p-font-mono);
+  font-size: 11px;
+  color: var(--p-text-secondary);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* 嵌套块级组件时:增加上下间距,编号位置同步上移 */
+.prism-evidence-item:has(> .prism-source),
+.prism-evidence-item:has(> .prism-drift-block),
+.prism-evidence-item:has(> .prism-finding),
+.prism-evidence-item:has(> pre),
+.prism-evidence-item:has(> blockquote) {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.prism-evidence-item:has(> .prism-source)::before,
+.prism-evidence-item:has(> .prism-drift-block)::before,
+.prism-evidence-item:has(> .prism-finding)::before,
+.prism-evidence-item:has(> pre)::before,
+.prism-evidence-item:has(> blockquote)::before {
+  top: 12px;
+}
+
+/* 嵌套块级组件:重置外边距,让它和编号自然对齐 */
+.prism-evidence-item > .prism-source,
+.prism-evidence-item > .prism-drift-block,
+.prism-evidence-item > .prism-finding,
+.prism-evidence-item > pre,
+.prism-evidence-item > blockquote {
+  margin: 0;
 }

@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { hljs } from '../hljs'
 import { addLineNumbers, parseLineRange } from '../line-numbers'
 import { addCopyButton } from '../copy-button'
@@ -64,5 +64,15 @@ function toggle() {
   }
 }
 
-defineExpose({ open: () => { if (!isOpen.value) toggle() } })
+function openFromRef() { if (!isOpen.value) toggle() }
+
+onMounted(() => {
+  detailsRef.value?.addEventListener('prism-ref-open', openFromRef)
+})
+
+onUnmounted(() => {
+  detailsRef.value?.removeEventListener('prism-ref-open', openFromRef)
+})
+
+defineExpose({ open: openFromRef })
 </script>

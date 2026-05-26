@@ -10,14 +10,9 @@ const props = defineProps<{ to: string; label?: string }>()
 function handleClick() {
   const target = document.getElementById(props.to)
   if (!target) return
-  if (target instanceof HTMLDetailsElement && !target.open) {
-    const body = target.querySelector('.prism-source-body, .prism-collapse-body') as HTMLElement
-    if (body) {
-      target.open = true
-      body.style.gridTemplateRows = '0fr'
-      requestAnimationFrame(() => { body.style.gridTemplateRows = '1fr' })
-    }
-  }
+
+  target.dispatchEvent(new CustomEvent('prism-ref-open', { bubbles: false }))
+
   target.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   target.style.outline = '2px solid var(--p-accent)'
   target.style.outlineOffset = '2px'

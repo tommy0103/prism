@@ -43,6 +43,8 @@ import PAnalogy from './components/PAnalogy.vue'
 import PTracks from './components/PTracks.vue'
 import PTrack from './components/PTrack.vue'
 import PFinding from './components/PFinding.vue'
+import PEvidence from './components/PEvidence.vue'
+import PEvidenceItem from './components/PEvidenceItem.vue'
 
 import 'virtual:uno.css'
 import './styles/base.css'
@@ -95,6 +97,8 @@ const components: Record<string, Component> = {
   PTracks,
   PTrack,
   PFinding,
+  PEvidence,
+  PEvidenceItem,
 }
 
 function mount(el: string | HTMLElement): App {
