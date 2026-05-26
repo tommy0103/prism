@@ -1,0 +1,340 @@
+<!-- lang: en -->
+
+<h1>Prism</h1>
+<p class="prism-muted" style="font-size: 1.15rem; margin-top: -0.5rem">A semantic document DSL for AI agents.<br>Teach agents to write with hierarchy, evidence, and structure — then render it as self-contained HTML.</p>
+
+<p-metrics>
+  <p-metric value="45" label="Components"></p-metric>
+  <p-metric value="8" label="Families"></p-metric>
+  <p-metric value="~103KB" label="gzip runtime"></p-metric>
+  <p-metric value="0" label="Dependencies at runtime"></p-metric>
+</p-metrics>
+
+<hr>
+
+<!-- ───────── WHY ───────── -->
+
+<h2>Why Prism</h2>
+
+<p>When an AI agent writes a document, it faces two problems. First, <strong>the visual layer</strong>: agents reinvent CSS every time, producing inconsistent, unstyled output. Second, <strong>the writing layer</strong>: without structural guardrails, agents dump information linearly — the reader gets a wall of text instead of a scannable document with hierarchy.</p>
+
+<p>Prism solves both by giving agents a vocabulary of 45 semantic components that encode both visual consistency and writing conventions.</p>
+
+<p-analogy
+  source="Design system for humans"
+  source-desc="A design system gives human designers reusable, consistent components — buttons, cards, modals — so every page looks coherent without redoing decisions."
+  target="Writing system for agents"
+  target-desc="Prism gives AI agents reusable, consistent document primitives — decisions, flows, evidence blocks — so every document reads coherently without redoing structure."
+  because="Both encode best practices into the component API itself, turning a rubric into a tool."
+></p-analogy>
+
+<p>The key insight is that <em>the DSL is the rubric</em>. A verdict belongs in a <code>&lt;p-decision&gt;</code>, not a sentence. A code reference belongs in a <code>&lt;p-source&gt;</code>, not a quoted snippet. A comparison belongs in <code>&lt;p-compare&gt;</code>, not a "pros and cons" list. Agents don't need to learn writing conventions — they pick from components that already enforce them.</p>
+
+<p-collapse title="What about custom styles?">
+  <p>Prism is opinionated, not exclusive. You can write your own <code>&lt;style&gt;</code> block in any template — for a one-off page, a specific brand moment, or just because. Prism components render with semantic class names you can override, and standard HTML stays standard HTML. Bring as much or as little of Prism as you want.</p>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── QUICK START ───────── -->
+
+<h2>Quick Start</h2>
+
+<h3>Install</h3>
+
+<p>One command, no build step. The runtime is pre-built. The agent discovers the skill via <code>SKILL.md</code> and uses it automatically when you ask for structured documents.</p>
+
+<p-tabs>
+  <p-tab title="Project (local)">
+    <p-code file="Terminal">
+      <pre><code class="language-bash">npx skills add tommy0103/prism</code></pre>
+    </p-code>
+  </p-tab>
+  <p-tab title="Global (all projects)">
+    <p-code file="Terminal">
+      <pre><code class="language-bash">npx skills add tommy0103/prism --global</code></pre>
+    </p-code>
+  </p-tab>
+</p-tabs>
+
+<h3>How it works</h3>
+
+<p>The workflow is three steps: the agent writes a template containing only Vue component markup (no boilerplate HTML), the build script wraps it into a self-contained file, and the output opens in any browser with zero dependencies.</p>
+
+<p-flow>
+  <p-flow-node color="accent">Agent writes template</p-flow-node>
+  <p-flow-arrow label="build"></p-flow-arrow>
+  <p-flow-node color="purple" subtitle="node prism/build.js">Build script</p-flow-node>
+  <p-flow-arrow label="embed"></p-flow-arrow>
+  <p-flow-node color="success" filled>Self-contained HTML</p-flow-node>
+</p-flow>
+
+<p><strong>Step 1</strong> — the agent writes a template. Here is a real example — a P0 bug report with a full reproduction trace collapsed behind the verdict:</p>
+
+<p-source path="template.html" lang="HTML" id="template-example">
+  <pre><code class="language-html">&lt;!-- lang: zh-CN --&gt;
+&lt;p-decision status="rejected" verdict="P0"&gt;
+  &lt;template #title&gt;并发 refresh 导致合法用户 token 家族被撤销&lt;/template&gt;
+  &lt;p&gt;影响所有多 tab 用户。两个 tab 同时刷新 token 时，第二个请求被误判为
+     token 盗用，导致整个 token 家族被撤销。&lt;/p&gt;
+&lt;/p-decision&gt;
+
+&lt;p-collapse title="复现链路"&gt;
+  &lt;p-source path="src/lib/refresh.ts:8-18" lang="TypeScript"&gt;
+    &lt;pre&gt;&lt;code&gt;export async function rotateRefreshToken(token: string) {
+  const record = await db.refreshToken.findByHash(hash(token));
+  if (record.consumedAt) {
+    await db.refreshToken.revokeFamily(record.familyId);
+    throw new AuthError('token_reuse_detected');
+  }
+  // ...
+}&lt;/code&gt;&lt;/pre&gt;
+  &lt;/p-source&gt;
+&lt;/p-collapse&gt;</code></pre>
+</p-source>
+
+<p><strong>Step 2 &amp; 3</strong> — build and open:</p>
+
+<p-code file="Terminal">
+  <pre><code class="language-bash">node prism/build.js template.html index.html
+open index.html   # No server. No deps. Just HTML.</code></pre>
+</p-code>
+
+<p-collapse title="Preview before installing">
+  <p-code file="Terminal">
+    <pre><code class="language-bash">git clone https://github.com/tommy0103/prism.git
+cd prism
+npx http-server . -p 3000
+# Open http://localhost:3000/references/showcase.html</code></pre>
+  </p-code>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── COMPONENTS ───────── -->
+
+<h2>What's in the Box</h2>
+
+<p><strong>45 components across 8 families.</strong> Every component ships with a <code>.md</code> doc explaining when — and when <em>not</em> — to use it. The "when not to use" section is what separates Prism from a typical component library: it doesn't just give agents tools, it teaches them restraint.</p>
+
+<p-stacked-bar
+  :segments="[
+    { percent: 16, color: 'accent' },
+    { percent: 13, color: 'success' },
+    { percent: 16, color: 'purple' },
+    { percent: 11, color: 'warning' },
+    { percent: 9, color: 'danger' },
+    { percent: 13, color: 'muted' },
+    { percent: 13, color: 'accent' },
+    { percent: 9, color: 'success' }
+  ]"
+  :legend="[
+    { label: 'Structure (7)', color: 'var(--p-accent)' },
+    { label: 'Reasoning (6)', color: 'var(--p-success)' },
+    { label: 'Process (7)', color: 'var(--p-purple)' },
+    { label: 'Source code (5)', color: 'var(--p-warning)' },
+    { label: 'Data (4)', color: 'var(--p-danger)' },
+    { label: 'Assessment (6)', color: 'var(--p-text-muted)' },
+    { label: 'Decisions (6)', color: 'var(--p-accent)' },
+    { label: 'Inline (4)', color: 'var(--p-success)' }
+  ]"
+></p-stacked-bar>
+
+<p-collapse title="Full component list by family">
+  <p-grid>
+    <p-card title="Decisions">
+      <p><code>p-decision</code> — Verdict card with status<br>
+      <code>p-callout</code> — Interruption block<br>
+      <code>p-compare</code> — Pro / con side-by-side<br>
+      <code>p-contrast</code> — Same word, different contexts<br>
+      <code>p-myth</code> — Misconception → correction<br>
+      <code>p-analogy</code> — Known ≈ unknown mapping</p>
+    </p-card>
+    <p-card title="Source Code">
+      <p><code>p-source</code> — Expandable code block<br>
+      <code>p-ref</code> — Inline reference chip<br>
+      <code>p-code</code> — Code block with file header<br>
+      <code>p-copy</code> — Copy-to-clipboard button<br>
+      <code>p-term</code> — Inline term with tooltip</p>
+    </p-card>
+    <p-card title="Data">
+      <p><code>p-metrics</code> + <code>p-metric</code> — Key numbers<br>
+      <code>p-bars</code> + <code>p-bar</code> — Bar chart<br>
+      <code>p-stacked-bar</code> — Proportional breakdown</p>
+    </p-card>
+    <p-card title="Process">
+      <p><code>p-flow</code> — Architecture flow diagram<br>
+      <code>p-flow-node</code> + <code>p-flow-arrow</code><br>
+      <code>p-steps</code> + <code>p-step</code> — Timeline<br>
+      <code>p-branch</code> + <code>p-branch-item</code> — Decision tree</p>
+    </p-card>
+    <p-card title="Assessment">
+      <p><code>p-tracks</code> + <code>p-track</code> — Parallel evaluation<br>
+      <code>p-finding</code> — Observation in a track<br>
+      <code>p-evidence</code> + <code>p-evidence-item</code><br>
+      <code>p-checklist</code> + <code>p-check-item</code><br>
+      <code>p-file-list</code> — File impact map</p>
+    </p-card>
+    <p-card title="Structure">
+      <p><code>p-collapse</code> + <code>p-collapse-group</code><br>
+      <code>p-tabs</code> + <code>p-tab</code> — Tab switcher<br>
+      <code>p-pages</code> + <code>p-page</code> — Multi-page<br>
+      <code>p-grid</code> — Column layout<br>
+      <code>p-card</code> — Container<br>
+      <code>p-divider</code> — Section divider</p>
+    </p-card>
+  </p-grid>
+
+  <p>And the inline primitives that glue everything together: <code>p-badge</code>, <code>p-tag</code>, <code>p-kv</code>, <code>p-params</code> + <code>p-param</code>.</p>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── BUILT-IN FEATURES ───────── -->
+
+<h2>Built-in Features</h2>
+
+<p>Beyond the component library, Prism bundles several document-level features that activate automatically — no configuration needed.</p>
+
+<p-grid :cols="2">
+  <p-card>
+    <h4>Line numbers</h4>
+    <p>Every code block shows line numbers. <code>&lt;p-source path="auth.ts:42-48"&gt;</code> starts numbering at line 42.</p>
+  </p-card>
+  <p-card>
+    <h4>Copy button</h4>
+    <p>Hover any code block to reveal a copy button. Line numbers are automatically stripped from the clipboard content.</p>
+  </p-card>
+  <p-card>
+    <h4>Floating TOC</h4>
+    <p>Auto-generated from <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> headings. Click to jump, smooth scrolling, active section tracking.</p>
+  </p-card>
+  <p-card>
+    <h4>Light &amp; dark mode</h4>
+    <p>Follows <code>prefers-color-scheme</code> automatically. Force a mode with <code>PrismUI.setTheme('dark')</code>.</p>
+  </p-card>
+</p-grid>
+
+<p>Syntax highlighting covers 14 languages: TypeScript, JavaScript, Rust, C/C++, Python, SQL, JSON, YAML, Bash, HTML/XML, CSS, and Diff.</p>
+
+<hr>
+
+<!-- ───────── CUSTOMIZATION ───────── -->
+
+<h2>Customization</h2>
+
+<p>Prism separates <strong>protocol</strong> (the DSL agents write) from <strong>visual</strong> (what it looks like). You can rebrand without changing how agents use it — the writing conventions stay, the look changes.</p>
+
+<p-steps>
+  <p-step progress="done" title="CSS variables" desc="Override --p-* in your template's &lt;style&gt; block. No rebuild needed."></p-step>
+  <p-step progress="done" title="New theme" desc="Write themes/my-theme.css, import in src/index.ts. Rebuild required."></p-step>
+  <p-step progress="done" title="Custom components" desc="Edit or add Vue SFCs in src/components/. Rebuild required."></p-step>
+</p-steps>
+
+<p-collapse title="Key CSS variables">
+  <p-code file="CSS variable reference">
+    <pre><code class="language-css">/* backgrounds */
+--p-bg, --p-bg-secondary, --p-surface
+
+/* text */
+--p-text, --p-text-secondary, --p-text-light
+
+/* semantic colors */
+--p-accent, --p-success, --p-warning, --p-danger, --p-purple
+
+/* borders */
+--p-border, --p-divider
+
+/* typography */
+--p-font-display, --p-font-body, --p-font-mono
+
+/* radii */
+--p-radius, --p-radius-lg</code></pre>
+  </p-code>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── FUTURE ───────── -->
+
+<h2>Future Directions</h2>
+
+<p>Prism is intentionally small today — 45 components, one Notion-inspired theme, one build path. The plan is to grow the <strong>vocabulary</strong>, not the surface area.</p>
+
+<p-tracks>
+  <p-track title="More themes" flag="note" flag-label="PLANNED">
+    Linear-style, brutalist, editorial, terminal-dark. The protocol stays the same; only the visual layer swaps. Themes live in <code>themes/</code> as drop-in CSS files.
+  </p-track>
+  <p-track title="More writing primitives" flag="note" flag-label="PLANNED">
+    <code>&lt;p-glossary&gt;</code>, <code>&lt;p-changelog&gt;</code>, <code>&lt;p-spec&gt;</code>, <code>&lt;p-test-result&gt;</code>. Driven by real agent patterns in the wild.
+  </p-track>
+  <p-track title="Theme authoring kit" flag="note" flag-label="PLANNED">
+    A documented token set + contrast checker, so community themes ship with the same quality bar as the Notion default.
+  </p-track>
+  <p-track title="Agent feedback loop" flag="note" flag-label="PLANNED">
+    Capture which components agents reach for most, surface gaps where they fall back to raw HTML.
+  </p-track>
+</p-tracks>
+
+<p>Have a theme or component you want to see? <a href="https://github.com/tommy0103/prism/issues">Open an issue</a> — Prism's direction is shaped by the documents agents are actually writing.</p>
+
+<hr>
+
+<!-- ───────── DEV ───────── -->
+
+<h2>Development</h2>
+
+<p-code file="Terminal">
+  <pre><code class="language-bash">npm install
+npm run build   # Build dist/prism.iife.js
+npm run dev     # Watch mode</code></pre>
+</p-code>
+
+<p-collapse title="Project structure">
+  <p-file-list :groups="[
+    {
+      module: 'root',
+      files: [
+        { path: 'SKILL.md', change: 'agent entry point' },
+        { path: 'build.js', change: 'template → HTML CLI' }
+      ]
+    },
+    {
+      module: 'references',
+      files: [
+        { path: 'principles.md', change: 'design principles' },
+        { path: 'showcase.html', change: 'every component demoed' }
+      ]
+    },
+    {
+      module: 'src/components',
+      files: [
+        { path: '45 Vue SFCs + 31 .md docs', change: 'added' }
+      ]
+    },
+    {
+      module: 'src/styles',
+      files: [
+        { path: 'base.css', change: 'structural' },
+        { path: 'themes/notion.css', change: 'visual — swappable' }
+      ]
+    },
+    {
+      module: 'src',
+      files: [
+        { path: 'index.ts', change: 'registration + mount' },
+        { path: 'hljs.ts', change: '14-language highlighter' }
+      ]
+    },
+    {
+      module: 'dist',
+      files: [
+        { path: 'prism.iife.js', change: '~103KB gzip' }
+      ]
+    }
+  ]"></p-file-list>
+</p-collapse>
+
+<hr>
+
+<p class="prism-muted" style="text-align: center; margin-top: 2rem">MIT © <a href="https://github.com/tommy0103">tommy0103</a></p>

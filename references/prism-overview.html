@@ -1,0 +1,268 @@
+<!-- lang: zh-CN -->
+
+<h1>Prism 项目全景</h1>
+<p class="prism-muted">一份对 Prism 语义文档 DSL 的结构化理解 — 它的定位、架构、设计哲学与成长空间。</p>
+
+<!-- ───────── 1. 定位 ───────── -->
+
+<h2>项目定位</h2>
+
+<p>Prism 解决的核心问题是：AI agent 在生成结构化文档时，缺乏一套统一的视觉语言和写作纪律。Markdown 太弱，手写 HTML 太自由，而 Prism 用组件 API 把信息架构的最佳实践 <strong>编码进组件本身</strong>。</p>
+
+<p-decision status="approved" verdict="定位清晰">
+  <template #title>面向 AI Agent 的语义文档 DSL</template>
+  <p>Prism 不是通用 UI 组件库，而是专门为 agent 写文档设计的工具链。它的目标读者是人类，但作者是 agent。这个定位让它可以做出对通用组件库来说太强的假设 — 比如强制视觉预算、要求先结论后证据。</p>
+</p-decision>
+
+<p>这个定位的独特之处在于：它不只提供「零件」，更提供「写作方法论」。principles.md 中长达 12KB 的设计原则，本质上是一套面向 agent 的风格指南。</p>
+
+<p-collapse title="与同类工具的差异">
+  <p-compare
+    :left="{ label: '传统组件库', items: ['提供零件，不约束用法', '面向人类开发者', '需要设计师把控一致性', '需要完整构建工具链'] }"
+    :right="{ label: 'Prism', items: ['组件 API 本身编码写作纪律', '面向 AI agent 作者', '一致性由组件语义保证', '单文件零依赖输出'] }"
+  ></p-compare>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 2. 工作流 ───────── -->
+
+<h2>核心工作流</h2>
+
+<p>Prism 的使用流程极度简洁：agent 写一个只含 Vue 模板内容的 HTML 片段，构建脚本把它包装成一个可以直接用浏览器打开的自包含文件。</p>
+
+<p-flow>
+  <p-flow-node color="accent">Agent 写模板</p-flow-node>
+  <p-flow-arrow label="build"></p-flow-arrow>
+  <p-flow-node color="purple" subtitle="node build.js">构建脚本</p-flow-node>
+  <p-flow-arrow label="embed"></p-flow-arrow>
+  <p-flow-node color="success" meta="~336KB">自包含 HTML</p-flow-node>
+</p-flow>
+
+<p>构建脚本做了三件事：自动提取 <code>&lt;h1&gt;</code> 作为页面标题，从 <code>&lt;!-- lang: xx --&gt;</code> 注释检测语言，然后将 Vue runtime、全部组件、全部样式内联注入。输出文件可以直接通过浏览器打开，无需任何服务器或构建工具。</p>
+
+<p-collapse title="构建管线细节">
+  <p>Vite 以 IIFE 格式打包 <code>src/index.ts</code> 入口，自定义的 <code>inlineCssPlugin</code> 在构建阶段将所有 CSS 提取并以 <code>&lt;style&gt;</code> 注入的形式前置到 JS 包中。整个产物 <code>dist/prism.iife.js</code> 约 336KB（gzip 后约 103KB），包含：</p>
+  <ul>
+    <li>Vue 3.5 runtime（含模板编译器）</li>
+    <li>45 个 Vue SFC 组件</li>
+    <li>highlight.js 核心 + 14 种语言语法</li>
+    <li>UnoCSS 生成的工具类</li>
+    <li>base.css + notion.css 主题 + hljs-theme.css</li>
+  </ul>
+
+  <p-code file="vite.config.ts — inlineCssPlugin 核心逻辑">
+    <pre><code class="language-typescript">function inlineCssPlugin(): Plugin {
+  return {
+    name: 'inline-css',
+    enforce: 'post',
+    generateBundle(_, bundle) {
+      let cssCode = ''
+      const cssFiles: string[] = []
+      for (const [fileName, chunk] of Object.entries(bundle)) {
+        if (fileName.endsWith('.css')) {
+          cssCode += (chunk as any).source
+          cssFiles.push(fileName)
+        }
+      }
+      for (const f of cssFiles) delete bundle[f]
+      if (cssCode) {
+        for (const chunk of Object.values(bundle)) {
+          if (chunk.type === 'chunk' && chunk.isEntry) {
+            const escaped = JSON.stringify(cssCode)
+            chunk.code = `(function(){var s=document.createElement("style");s.textContent=${escaped};document.head.appendChild(s)})();\n` + chunk.code
+            break
+          }
+        }
+      }
+    },
+  }
+}</code></pre>
+  </p-code>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 3. 技术栈 ───────── -->
+
+<h2>技术栈</h2>
+
+<p>Prism 的技术选型围绕一个核心约束：<strong>输出必须是零依赖的单文件 HTML</strong>。这意味着所有运行时都要打包进 IIFE，不能依赖 CDN 或 npm install。</p>
+
+<p-metrics>
+  <p-metric value="45" label="Vue SFC 组件"></p-metric>
+  <p-metric value="8" label="组件家族"></p-metric>
+  <p-metric value="14" label="语法高亮语言"></p-metric>
+  <p-metric value="~103KB" label="gzip 体积"></p-metric>
+</p-metrics>
+
+<p-grid>
+  <p-card>
+    <h4>核心运行时</h4>
+    <p-kv :items="[
+      { key: '框架', value: 'Vue 3.5 (SFC + Composition API)' },
+      { key: '打包', value: 'Vite 6 → IIFE' },
+      { key: '样式', value: 'UnoCSS + 手写 CSS 变量' },
+      { key: '高亮', value: 'highlight.js 11.11' }
+    ]"></p-kv>
+  </p-card>
+  <p-card>
+    <h4>开发工具</h4>
+    <p-kv :items="[
+      { key: '语言', value: 'TypeScript 5.7 (strict)' },
+      { key: '校验', value: 'check-inventory.js + lint-template.js' },
+      { key: '版本', value: 'v0.2.0' },
+      { key: '协议', value: 'npm 包分发' }
+    ]"></p-kv>
+  </p-card>
+</p-grid>
+
+<hr>
+
+<!-- ───────── 4. 组件体系 ───────── -->
+
+<h2>组件体系</h2>
+
+<p>45 个组件按语义功能划分为 8 个家族。每个组件都配有 <code>.md</code> 文档，说明 props、slots、使用示例和「何时不该用」。这个「反模式」文档是 Prism 区别于一般组件库的地方 — 它不只告诉你能做什么，更告诉你不该做什么。</p>
+
+<p-stacked-bar
+  :segments="[
+    { percent: 18, color: 'accent' },
+    { percent: 18, color: 'success' },
+    { percent: 16, color: 'purple' },
+    { percent: 13, color: 'warning' },
+    { percent: 11, color: 'danger' },
+    { percent: 9, color: 'muted' },
+    { percent: 9, color: 'accent' },
+    { percent: 6, color: 'success' }
+  ]"
+  :legend="[
+    { label: '结构 · 8 个', color: 'var(--p-accent)' },
+    { label: '评估 · 8 个', color: 'var(--p-success)' },
+    { label: '流程 · 7 个', color: 'var(--p-purple)' },
+    { label: '源码 · 6 个', color: 'var(--p-warning)' },
+    { label: '数据 · 5 个', color: 'var(--p-danger)' },
+    { label: '判断 · 4 个', color: 'var(--p-text-muted)' },
+    { label: '容器 · 4 个', color: 'var(--p-accent)' },
+    { label: '内联 · 3 个', color: 'var(--p-success)' }
+  ]"
+></p-stacked-bar>
+
+<p>组件设计上有一个关键区分：<strong>重量级组件</strong>（decision、flow、branch、compare、steps、stacked-bar 等）受视觉预算约束 — 每个 <code>&lt;h2&gt;</code> 区域最多 1.5 个；而 <strong>轻量级组件</strong>（source、ref、badge、tag、kv）不受限制。</p>
+
+<p-collapse title="八大家族详细清单">
+  <p-tracks>
+    <p-track title="决策" flag="note" flag-label="CORE">
+      <code>p-decision</code> · <code>p-callout</code> — 结论优先，状态可视化。
+    </p-track>
+    <p-track title="推理与评估" flag="note" flag-label="8 个">
+      <code>p-finding</code> · <code>p-evidence</code> · <code>p-tracks</code> · <code>p-compare</code> · <code>p-contrast</code> · <code>p-myth</code> · <code>p-analogy</code> — 多维度判断和论证。
+    </p-track>
+    <p-track title="结构与布局" flag="note" flag-label="8 个">
+      <code>p-collapse</code> · <code>p-tabs</code> · <code>p-pages</code> · <code>p-grid</code> · <code>p-card</code> · <code>p-divider</code> · <code>p-checklist</code> · <code>p-file-list</code>
+    </p-track>
+    <p-track title="源码引用" flag="note" flag-label="EXEMPT">
+      <code>p-source</code> · <code>p-ref</code> · <code>p-code</code> · <code>p-copy</code> — 不受视觉预算限制，按代码需要使用。
+    </p-track>
+    <p-track title="数据可视化" flag="note" flag-label="3 种">
+      <code>p-metrics</code> · <code>p-bars</code> · <code>p-stacked-bar</code> — 数字说话时才出场。
+    </p-track>
+    <p-track title="流程" flag="note" flag-label="3 种">
+      <code>p-flow</code>（线性）· <code>p-branch</code>（分支）· <code>p-steps</code>（时间线）
+    </p-track>
+  </p-tracks>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 5. 设计哲学 ───────── -->
+
+<h2>设计哲学</h2>
+
+<p>Prism 的设计原则不是「参考建议」，而是嵌入组件 API 的硬约束。这些原则的核心思想可以归纳为三条。</p>
+
+<p-evidence conclusion="设计哲学的三根支柱">
+  <p-evidence-item><strong>层次优先</strong> — 结论必须可见，证据必须存在但折叠。读者先扫描标题和决策卡片，只在需要时展开细节。<code>&lt;p-collapse&gt;</code> 不是可选装饰，是传递完整性的主要机制。</p-evidence-item>
+  <p-evidence-item><strong>一次交付完整</strong> — 读者不应该需要追问。每个判断有证据，每个选择有被排除的替代方案，每个风险有缓解措施。顶层可扫描，折叠层穷尽。</p-evidence-item>
+  <p-evidence-item><strong>颜色即语义</strong> — 绿色 = 通过/安全，红色 = 拒绝/危险，黄色 = 探索/警告，蓝色 = 信息，紫色 = 审查。永远不要装饰性地使用颜色。</p-evidence-item>
+</p-evidence>
+
+<p>这些原则产生了一些具体的写作规则：组件之间必须有散文桥接，不允许两个重量级组件直接堆叠；callout 只用于中断（全文不超过 2–3 个）；图表要「挣得」出场资格；bug 必须有完整的复现链路。</p>
+
+<p-collapse title="视觉预算计算示例">
+  <p>假设一份文档有 4 个 <code>&lt;h2&gt;</code> 区，预算上限为 4 × 1.5 = 6 个重量级组件。如果当前顶层可见 7 个，需要把最弱的一个降级为散文或移入 <code>&lt;p-collapse&gt;</code>（折叠内的组件不计入预算）。<code>&lt;p-source&gt;</code> 和 <code>&lt;p-ref&gt;</code> 永远豁免。</p>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 6. 架构理解 ───────── -->
+
+<h2>架构要点</h2>
+
+<p>从源码结构看，Prism 的架构决策都服务于「单文件零依赖输出」这一核心约束。</p>
+
+<p-branch root="入口 src/index.ts 做了什么？">
+  <p-branch-item cond="注册" outcome="45 组件全局注册">导入所有 Vue SFC，逐一 <code>app.component()</code></p-branch-item>
+  <p-branch-item cond="挂载" status="success" outcome="mount(el) 暴露到 window">读取目标元素的 innerHTML 作为模板，创建 Vue 应用并挂载</p-branch-item>
+  <p-branch-item cond="增强" outcome="TOC + 高亮 + 复制按钮">挂载后自动运行 <code>createToc()</code>、highlight.js、copy-button</p-branch-item>
+  <p-branch-item cond="主题" outcome="setTheme() 暴露到 window">支持 light / dark / auto 三档</p-branch-item>
+</p-branch>
+
+<p>样式系统分为三层：<code>base.css</code>（740 行纯结构 CSS，无颜色）、<code>themes/notion.css</code>（2361 行 Notion 风格主题，通过 CSS 变量控制颜色）、<code>hljs-theme.css</code>（语法高亮配色）。这种分离意味着新增主题只需要写一个新的主题 CSS 文件。</p>
+
+<p-collapse title="组件注册完整性校验">
+  <p><code>scripts/check-inventory.js</code> 会自动检查：</p>
+  <p-checklist>
+    <p-check-item checked>每个 <code>.vue</code> 文件都在 <code>index.ts</code> 中被 import</p-check-item>
+    <p-check-item checked>每个组件都在 <code>components</code> 对象中注册</p-check-item>
+    <p-check-item checked>每个组件都有对应的 <code>.md</code> 文档</p-check-item>
+    <p-check-item checked>SKILL.md 引用了所有组件</p-check-item>
+  </p-checklist>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 7. 当前状态 ───────── -->
+
+<h2>当前状态与成长空间</h2>
+
+<p>Prism 处于 v0.2.0 阶段，核心功能已经成熟，但仍有明确的扩展方向。</p>
+
+<p-tracks>
+  <p-track title="组件覆盖度" flag="passed">
+    45 个组件覆盖了文档写作的主要场景：决策、代码引用、数据可视化、流程图、对比评估。每个组件都有完整文档和反模式指引。
+  </p-track>
+  <p-track title="构建管线" flag="passed">
+    从模板到自包含 HTML 的流程稳定，有校验脚本保障一致性。
+  </p-track>
+  <p-track title="主题生态" flag="polish" flag-label="可扩展">
+    目前只有 Notion 风格一套主题。README 提到了 Linear、brutalist、editorial、terminal-dark 等方向，但尚未实现。CSS 变量体系已经为多主题做好了准备。
+  </p-track>
+  <p-track title="测试覆盖" flag="at-risk" flag-label="缺失">
+    项目中没有看到单元测试或集成测试。对于一个 45 组件的库，组件级测试（至少是快照测试）会显著提升迭代安全性。
+  </p-track>
+</p-tracks>
+
+<p>从 README 的 roadmap 来看，计划中的组件包括 <code>&lt;p-glossary&gt;</code>、<code>&lt;p-changelog&gt;</code>、<code>&lt;p-spec&gt;</code>、<code>&lt;p-test-result&gt;</code>，以及主题创作工具包和 agent 反馈循环。</p>
+
+<p-collapse title="我对优先级的建议">
+  <p-steps>
+    <p-step progress="done" title="当前已完成" desc="45 组件 + 设计原则 + 构建管线 + 校验脚本"></p-step>
+    <p-step progress="active" flag="accent" flag-label="建议" title="补充基础测试" desc="至少为核心组件（decision、collapse、flow、source）添加快照测试，保障重构安全性"></p-step>
+    <p-step flag="accent" flag-label="建议" title="扩展主题" desc="CSS 变量体系已就位，增加 1-2 个风格差异明显的主题能验证主题系统的灵活性"></p-step>
+    <p-step title="组件扩展" desc="glossary、changelog 等新组件按需添加，不急"></p-step>
+  </p-steps>
+</p-collapse>
+
+<hr>
+
+<!-- ───────── 8. 总结 ───────── -->
+
+<h2>总结</h2>
+
+<p>Prism 是一个<strong>定位精准、设计成熟</strong>的项目。它不试图成为通用组件库，而是针对「agent 写文档」这个具体场景，把信息架构的最佳实践编码进组件 API。45 个组件、8 大家族、一套完整的设计原则、自包含的构建管线 — 这些构成了一个闭环的创作工具链。</p>
+
+<p-decision status="approved" verdict="成熟度高">
+  <template #title>核心可用，生态待建</template>
+  <p>组件体系和设计哲学已经足够支撑日常使用。下一步的重心应该在测试覆盖和主题生态上，而不是急于扩展组件数量。</p>
+</p-decision>

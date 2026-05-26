@@ -11,6 +11,10 @@
 
 Teach agents to write with hierarchy, evidence, and structure, then render it as self-contained HTML.
 
+<p align="center">
+  <a href="https://tommy0103.github.io/prism/references/showcase-readme.html">Open README in prism</a>
+</p>
+
 [![stars](https://img.shields.io/github/stars/tommy0103/prism?style=flat-square)](https://github.com/tommy0103/prism/stargazers)
 [![version](https://img.shields.io/github/v/tag/tommy0103/prism?label=version&style=flat-square)](https://github.com/tommy0103/prism/releases)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -34,7 +38,7 @@ Teach agents to write with hierarchy, evidence, and structure, then render it as
   </tr>
 </table>
 
-<p align="center"><i>Same content, different vocabulary.</p>
+<p align="center"><i>Same content, different vocabulary.</i></p>
 
 <p align="center">
   <a href="https://tommy0103.github.io/prism/references/showcase.html"><b>→ Open the live showcase</b></a>
