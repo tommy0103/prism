@@ -1,7 +1,7 @@
 <template>
   <div class="prism-evidence">
     <div v-if="hasConclusion" class="prism-evidence-conclusion">
-      <slot name="conclusion">{{ conclusion }}</slot>
+      <span><slot name="conclusion">{{ conclusion }}</slot></span>
     </div>
     <div class="prism-evidence-items">
       <slot />

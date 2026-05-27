@@ -1,0 +1,761 @@
+<!-- lang: en -->
+<h1>Order Pipeline Cascade Failure — Postmortem</h1>
+<p class="prism-subtitle">Incident #INC-2847 — Root cause analysis, fix evaluation, and hardening plan</p>
+
+<p-metrics>
+  <p-metric value="23 min" label="Total downtime"></p-metric>
+  <p-metric value="1,247" label="Failed orders"></p-metric>
+  <p-metric value="$184K" label="Estimated revenue loss"></p-metric>
+</p-metrics>
+
+<p-callout type="info" icon="i">
+  <p>This document is a <strong>component showcase</strong>. Some sections exist solely to demonstrate specific Prism components and may feel disconnected from the narrative. In a real document, these elements would be woven into the flow naturally — or omitted entirely.</p>
+</p-callout>
+
+<hr>
+
+<!-- ───── Key Decisions ───── -->
+
+<h2>Key Decisions</h2>
+
+<p>Two decisions came out of this incident: how to fix the immediate cascade failure, and how to prevent similar failures long-term. A third option (full service mesh migration) was evaluated and deferred.</p>
+
+<p-decision status="approved" verdict="Adopted">
+  <template #title>Add per-service circuit breakers with exponential backoff</template>
+  <p>Deploy Hystrix-style circuit breakers at every service boundary. When the inventory service fails, the order service stops retrying after 3 attempts and returns a graceful degradation response instead of cascading the failure downstream.</p>
+</p-decision>
+
+<p-decision status="exploring" verdict="Exploring">
+  <template #title>Async order processing via message queue</template>
+  <p>Decouple the order pipeline from synchronous inventory checks by introducing a message queue. Orders would be accepted immediately and processed asynchronously — eliminates the tight coupling that caused the cascade.</p>
+</p-decision>
+
+<p-collapse title="Why not a full service mesh (Istio)?" borderless>
+  <p>Istio would provide circuit breaking, retries, and observability out of the box, but the migration cost is estimated at 6 engineer-weeks. The team agreed to revisit after Q3 when the platform team finishes the Kubernetes migration. <p-badge color="danger">Deferred</p-badge></p>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Architecture ───── -->
+
+<h2>Architecture</h2>
+
+<p>The order pipeline has two paths: the hot path (every checkout request) and the cold path (async fulfillment, triggered after payment confirmation).</p>
+
+<h3>Hot path — checkout request</h3>
+
+<p-flow>
+  <p-flow-node>Client</p-flow-node>
+  <p-flow-arrow label="POST"></p-flow-arrow>
+  <p-flow-node color="accent" meta="12ms">API Gateway</p-flow-node>
+  <p-flow-arrow label="gRPC"></p-flow-arrow>
+  <p-flow-node color="warning" meta="45ms">Order Service</p-flow-node>
+  <p-flow-arrow label="reserve"></p-flow-arrow>
+  <p-flow-node color="danger" meta="timeout">Inventory Service</p-flow-node>
+</p-flow>
+
+<h3>Full request lifecycle</h3>
+
+<p-flow>
+  <p-flow-node>Browser</p-flow-node>
+  <p-flow-arrow></p-flow-arrow>
+  <p-flow-node type="external">CDN</p-flow-node>
+  <p-flow-arrow></p-flow-arrow>
+  <p-flow-node color="warning" meta="5000/s">Rate Limiter</p-flow-node>
+  <p-flow-arrow></p-flow-arrow>
+  <p-flow-node color="accent">Auth</p-flow-node>
+  <p-flow-arrow></p-flow-arrow>
+  <p-flow-node color="accent" meta="12ms">API Gateway</p-flow-node>
+  <p-flow-arrow label="gRPC"></p-flow-arrow>
+  <p-flow-node color="warning" subtitle="POST /api/orders">Order Service</p-flow-node>
+  <p-flow-arrow label="reserve"></p-flow-arrow>
+  <p-flow-node color="danger" meta="timeout">Inventory Service</p-flow-node>
+  <p-flow-arrow label="query"></p-flow-arrow>
+  <p-flow-node type="store" color="purple">PostgreSQL</p-flow-node>
+  <p-flow-arrow></p-flow-arrow>
+  <p-flow-node>Browser</p-flow-node>
+</p-flow>
+
+<p>The order service calls the inventory service synchronously to reserve stock. The core logic is in <p-ref to="src-checkout" label="order.ts:58"></p-ref> — it validates the cart, reserves inventory, then creates a payment intent:</p>
+
+<p-source path="src/services/order.ts:58-72" lang="TypeScript" id="src-checkout">
+  <pre><code>export async function processCheckout(cart: Cart, userId: string) {
+  const validated = await validateCart(cart);
+  // validated = { items: [{ sku: "WH-1000XM5", qty: 2, price: 349.99 }], total: 699.98 }
+  if (!validated.ok) throw new OrderError('invalid_cart');
+
+  const reservation = await inventoryClient.reserve(validated.items);
+  // reservation = { reservationId: "res_7f3a", expiresAt: "2026-01-15T10:47:00Z" }
+  if (!reservation.success) throw new OrderError('out_of_stock');
+
+  const payment = await paymentClient.createIntent({
+    amount: validated.total,
+    currency: 'USD',
+    metadata: { reservationId: reservation.reservationId }
+  });
+  return { orderId: payment.orderId, clientSecret: payment.clientSecret };
+}</code></pre>
+  <template #note>The synchronous <code>inventoryClient.reserve()</code> call at line 64 is where the cascade failure originated. No timeout was configured, so a hung inventory service blocked the entire order pipeline.</template>
+</p-source>
+
+<p-collapse title="Cold path — async fulfillment pipeline">
+  <p-flow vertical>
+    <p-flow-node>Payment confirmed</p-flow-node>
+    <p-flow-arrow label="webhook"></p-flow-arrow>
+    <p-flow-node color="accent">Order Service updates status</p-flow-node>
+    <p-flow-arrow label="enqueue"></p-flow-arrow>
+    <p-flow-node color="warning">Fulfillment Worker</p-flow-node>
+    <p-flow-arrow label="ship"></p-flow-arrow>
+    <p-flow-node color="success">Warehouse API confirms shipment</p-flow-node>
+  </p-flow>
+
+  <p>The fulfillment worker dequeues orders from <p-ref to="src-worker" label="worker.ts:15"></p-ref> and coordinates with the warehouse API. Each job has a 30-second timeout and automatic retry with exponential backoff:</p>
+
+  <p-source path="src/workers/fulfillment.ts:15-28" lang="TypeScript" id="src-worker">
+    <pre><code>export async function processFulfillment(job: FulfillmentJob) {
+  const order = await db.order.findById(job.orderId);
+  if (!order || order.status !== 'paid') return;
+
+  const shipment = await warehouseClient.createShipment({
+    items: order.items,
+    address: order.shippingAddress,
+    priority: order.expedited ? 'express' : 'standard',
+  });
+
+  await db.order.update(order.id, {
+    status: 'shipped',
+    trackingNumber: shipment.trackingId,
+  });
+}</code></pre>
+    <template #note>The fulfillment path was unaffected by this incident because it runs asynchronously via a message queue — exactly the pattern proposed for the hot path.</template>
+  </p-source>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Tradeoff Analysis ───── -->
+
+<h2>Tradeoff Analysis</h2>
+
+<p>Circuit breakers solve the immediate cascade risk but introduce new operational concerns — mainly around tuning thresholds and handling partial failures gracefully.</p>
+
+<p-compare>
+  <template #pro>
+    <div class="prism-compare-col-title">Benefits</div>
+    <ul>
+      <li>Prevents cascade failures — failing fast instead of blocking</li>
+      <li>Graceful degradation — users see "temporarily unavailable" not a timeout</li>
+      <li>Per-service health isolation — one failure stays contained</li>
+    </ul>
+  </template>
+  <template #con>
+    <div class="prism-compare-col-title">Risks</div>
+    <ul>
+      <li>False positives during traffic spikes can trip breakers unnecessarily</li>
+      <li>Half-open state testing adds latency to recovery</li>
+      <li>Threshold tuning requires production traffic analysis per service</li>
+    </ul>
+  </template>
+</p-compare>
+
+<p>Response time comparison — current state vs. projected with circuit breakers:</p>
+
+<p-bars>
+  <p-bar label="Healthy checkout" value="120ms" :percent="12" color="success"></p-bar>
+  <p-bar label="With circuit breaker trip" value="45ms" :percent="5" color="accent"></p-bar>
+  <p-bar label="Current failure (no breaker)" value="30,000ms" :percent="100" color="danger"></p-bar>
+  <p-bar label="Cold path (async)" value="850ms" :percent="9" color="warning"></p-bar>
+</p-bars>
+
+<hr>
+
+<!-- ───── Known Issues ───── -->
+
+<h2>Known Issues</h2>
+
+<p>Investigation revealed three issues, ranked by severity.</p>
+
+<p-decision status="rejected" verdict="P0">
+  <template #title>No timeout on inventory gRPC calls — infinite hang on failure</template>
+  <p>The <code>inventoryClient.reserve()</code> call has no configured timeout. When the inventory service became unresponsive, every in-flight checkout request blocked indefinitely, exhausting the connection pool and cascading to all downstream services.</p>
+</p-decision>
+
+<p-collapse title="Reproduction trace">
+  <h4>Trigger condition</h4>
+  <p>The inventory service deployed an index creation migration that acquired a <code>SHARE</code> lock on the <code>stock_reservations</code> table for 4 minutes. All concurrent <code>INSERT</code> and <code>UPDATE</code> queries blocked waiting for the lock to release.</p>
+
+  <h4>Order service calls reserve()</h4>
+  <p>The checkout handler in <p-ref to="bug-reserve-a" label="order.ts:64"></p-ref> sends a gRPC call with no deadline:</p>
+
+  <p-source path="src/services/order.ts:64" lang="TypeScript" id="bug-reserve-a">
+    <pre><code>const reservation = await inventoryClient.reserve(validated.items);
+// inventoryClient has no deadline/timeout configured
+// gRPC default: wait forever
+// At 14:23:01 UTC, this call hangs — the inventory DB is locked</code></pre>
+  </p-source>
+
+  <p>The request thread blocks. New requests keep arriving and also block.</p>
+
+  <h4>Connection pool exhaustion</h4>
+  <p>After 45 seconds, all 100 connections in the pool are occupied by hanging requests:</p>
+
+  <p-source path="src/config/grpc.ts:8-12" lang="TypeScript" id="bug-pool">
+    <pre><code>export const inventoryClient = new InventoryClient(
+  process.env.INVENTORY_SERVICE_URL,
+  grpc.credentials.createInsecure(),
+  {
+    'grpc.max_concurrent_streams': 100,
+    // No deadline configured
+    // No keepalive configured
+  }
+);</code></pre>
+    <template #note>Root cause: no <code>deadline</code> option passed to call-site invocations. The client waits forever for a response that will never come. Fix: pass <code>{ deadline: Date.now() + 5000 }</code> as call options on every gRPC invocation.</template>
+  </p-source>
+
+  <h4>Result</h4>
+  <p-steps>
+    <p-step progress="done" title="14:23:01 — Inventory DB locked by migration" desc="Schema migration acquires exclusive lock on stock_reservations"></p-step>
+    <p-step progress="active" flag="danger" flag-label="BUG" title="14:23:45 — Connection pool exhausted" desc="100/100 gRPC connections blocked, new requests queued"></p-step>
+    <p-step flag="danger" flag-label="IMPACT" title="14:24:12 — API Gateway returns 502 for all /api/orders" desc="Health checks start failing, load balancer marks pods unhealthy"></p-step>
+  </p-steps>
+</p-collapse>
+
+<p-decision status="exploring" verdict="P1">
+  <template #title>No circuit breaker between order and inventory services</template>
+  <p>Even with timeouts, a sustained inventory outage will generate thousands of timeout errors. A circuit breaker in <p-ref to="src-checkout" label="order.ts:58"></p-ref> should trip after 5 consecutive failures and return a cached response or graceful error.</p>
+</p-decision>
+
+<p-source path="src/services/order.ts:62-66 (proposed)" lang="TypeScript" id="src-breaker">
+  <pre><code>const breaker = new CircuitBreaker(inventoryClient.reserve, {
+  timeout: 5000,           // 5s per call
+  errorThresholdPercentage: 50,
+  resetTimeout: 30000,     // try again after 30s
+});
+const reservation = await breaker.fire(validated.items);</code></pre>
+</p-source>
+
+<p-decision status="pending" verdict="P2">
+  <template #title>Schema migrations run without non-blocking DDL enforcement</template>
+  <p>The migration that triggered this incident used <code>CREATE INDEX</code> without <code>CONCURRENTLY</code>, acquiring a <code>SHARE</code> lock on a hot table that blocked all concurrent writes. Migration tooling should enforce <code>CONCURRENTLY</code> for indexes on tables above 100K rows.</p>
+</p-decision>
+
+<p-source path="migrations/20260115_add_expiry_index.sql" lang="SQL" id="src-migration">
+  <pre><code>-- This migration locked stock_reservations for ~4 minutes
+CREATE INDEX idx_reservations_expiry
+  ON stock_reservations (expires_at);
+
+-- Should have been:
+-- CREATE INDEX CONCURRENTLY idx_reservations_expiry
+--   ON stock_reservations (expires_at);
+-- (CONCURRENTLY avoids the SHARE lock but cannot run inside a transaction)</code></pre>
+</p-source>
+
+<hr>
+
+<!-- ───── Affected Endpoints ───── -->
+
+<h2>Affected Endpoints</h2>
+
+<p>Four API endpoints were impacted during the 23-minute outage window.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Impact</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>POST /api/orders</code></td>
+      <td>100% failure — all checkout requests timed out</td>
+      <td><p-badge color="danger">Down</p-badge></td>
+    </tr>
+    <tr>
+      <td><code>GET /api/inventory/:sku</code></td>
+      <td>Stock queries hung on locked table</td>
+      <td><p-badge color="danger">Down</p-badge></td>
+    </tr>
+    <tr>
+      <td><code>POST /api/payments/intent</code></td>
+      <td>No new intents created (upstream blocked)</td>
+      <td><p-badge color="warning">Degraded</p-badge></td>
+    </tr>
+    <tr>
+      <td><code>GET /api/orders/:id</code></td>
+      <td>Read-only, unaffected</td>
+      <td><p-badge color="success">Healthy</p-badge></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3><p-badge color="accent">POST</p-badge> /api/orders</h3>
+<p class="prism-small prism-muted">Create a new order from a validated shopping cart.</p>
+<p-collapse title="Request / response details">
+  <h4>Request body</h4>
+  <p-code file="POST /api/orders">
+    <pre><code>{
+  "cartId": "cart_8f3a2b",
+  "shippingAddress": { "line1": "123 Main St", "city": "Portland", "state": "OR", "zip": "97201" },
+  "paymentMethod": "pm_visa_4242"
+}</code></pre>
+  </p-code>
+  <h4>Response 201</h4>
+  <p-code>
+    <pre><code>{
+  "orderId": "ord_9c4d1e",
+  "status": "pending_payment",
+  "clientSecret": "pi_3Mx_secret_abc123",
+  "expiresAt": "2026-01-15T10:47:00Z"
+}</code></pre>
+  </p-code>
+  <h4>Error codes</h4>
+  <p-kv :items="[
+    { key: '400', value: 'Invalid cart or missing required fields' },
+    { key: '409', value: 'Item out of stock (reservation failed)' },
+    { key: '502', value: 'Upstream service unavailable (the failure during this incident)' }
+  ]"></p-kv>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Incident Timeline ───── -->
+
+<h2>Incident Timeline</h2>
+
+<p>Five phases from trigger to full resolution. We are currently in phase 4 — the circuit breaker implementation is in progress.</p>
+
+<p-steps :progress="70">
+  <p-step progress="done" title="14:23 — Migration deployed, DB table locked" desc="CREATE INDEX acquires SHARE lock on stock_reservations, blocking writes"></p-step>
+  <p-step progress="done" title="14:24 — Order pipeline saturated" desc="100% of checkout requests timing out, PagerDuty alert fires"></p-step>
+  <p-step progress="done" title="14:34 — Migration completes, lock released" desc="Inventory service recovers, but order service pods still unhealthy"></p-step>
+  <p-step progress="active" title="Implement circuit breakers + timeouts" desc="Add 5s deadline to all gRPC calls, deploy circuit breaker library"></p-step>
+  <p-step title="Load test with simulated inventory failure" desc="Verify circuit breaker trips correctly under sustained failure"></p-step>
+</p-steps>
+
+<p-collapse title="Rollback plan">
+  <p>Rollback steps for each remediation phase:</p>
+  <p-steps>
+    <p-step flag="warning" title="Rollback: gRPC timeouts" desc="Revert grpc.ts config — no data changes, safe to revert immediately"></p-step>
+    <p-step flag="warning" title="Rollback: circuit breaker" desc="Remove opossum dependency, revert to direct gRPC calls. Feature flag CIRCUIT_BREAKER_ENABLED=false as interim step"></p-step>
+    <p-step flag="danger" flag-label="BLOCKED" title="Rollback: async order queue" desc="Cannot revert once orders are flowing through the queue — would need to drain all pending messages first"></p-step>
+  </p-steps>
+  <p-callout type="danger" icon="!">
+    <p><strong>Irreversible step:</strong> Once the async queue is deployed and processing live orders, reverting to synchronous checkout requires draining all in-flight messages. Coordinate with oncall before attempting.</p>
+  </p-callout>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Impact Scope ───── -->
+
+<h2>Impact Scope</h2>
+
+<p>The fix touches 4 modules across 11 files.</p>
+
+<p-collapse title="File change details">
+  <p-file-list>
+    <p-file-group module="src/services">
+      <p-file path="order.ts" status="modified" purpose="Add circuit breaker wrapper around inventory call"></p-file>
+      <p-file path="inventory-client.ts" status="modified" purpose="Configure gRPC deadline + keepalive"></p-file>
+      <p-file path="payment-client.ts" status="modified" purpose="Add timeout for consistency"></p-file>
+    </p-file-group>
+    <p-file-group module="src/config">
+      <p-file path="grpc.ts" status="modified" purpose="Add default deadline to all gRPC channels"></p-file>
+      <p-file path="circuit-breaker.ts" status="added" purpose="Circuit breaker factory with per-service config"></p-file>
+    </p-file-group>
+    <p-file-group module="src/middleware">
+      <p-file path="health.ts" status="modified" purpose="Add dependency health to readiness probe"></p-file>
+    </p-file-group>
+    <p-file-group module="migrations">
+      <p-file path="20260115_add_expiry_index.sql" status="modified" purpose="Rewrite as non-blocking DDL"></p-file>
+    </p-file-group>
+  </p-file-list>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Related Components ───── -->
+
+<h2>Related Components</h2>
+
+<p>These services have direct dependencies on the order pipeline.</p>
+
+<p-grid :cols="2">
+  <p-card title="Inventory Service">
+    <p>Manages stock reservations and warehouse sync. The cascade failure originated here when a migration locked the <code>stock_reservations</code> table.</p>
+    <template #footer>
+      <p-ref to="bug-pool" label="grpc.ts:8"></p-ref>
+    </template>
+  </p-card>
+  <p-card title="Payment Service">
+    <p>Processes Stripe payment intents. Was indirectly affected — no new intents could be created because the order service was blocked upstream.</p>
+    <template #footer>
+      <p-ref to="src-checkout" label="order.ts:58"></p-ref>
+    </template>
+  </p-card>
+</p-grid>
+
+<hr>
+
+<!-- ───── Error Distribution ───── -->
+
+<h2>Error Distribution</h2>
+
+<p>Breakdown of error types during the 23-minute outage window, based on API Gateway logs:</p>
+
+<p-stacked-bar
+  :segments="[
+    { percent: 54, color: 'danger' },
+    { percent: 28, color: 'warning' },
+    { percent: 12, color: 'accent' },
+    { percent: 6, color: 'muted' }
+  ]"
+  :legend="[
+    { label: 'gRPC timeout / DEADLINE_EXCEEDED (54%)', color: 'var(--p-danger)' },
+    { label: 'Connection pool exhausted (28%)', color: 'var(--p-warning)' },
+    { label: 'Health check failures (12%)', color: 'var(--p-accent)' },
+    { label: 'Client-side aborts (6%)', color: 'var(--p-bg-tertiary)' }
+  ]"
+></p-stacked-bar>
+
+<hr>
+
+<!-- ───── Fix Approaches ───── -->
+
+<h2>Fix Approaches</h2>
+
+<p>Three approaches were evaluated. The circuit breaker approach was adopted as the immediate fix; async decoupling is planned for Q2.</p>
+
+<p-tabs>
+  <p-tab title="Approach A: Circuit Breaker (Adopted)">
+    <h4>Overview</h4>
+    <p>Wrap every cross-service call in a circuit breaker (opossum library). When failures exceed the threshold, the breaker trips and returns a fallback immediately — no more cascading waits.</p>
+
+    <h4>Performance</h4>
+    <p-bars>
+      <p-bar label="Healthy call" value="120ms" :percent="12" color="success"></p-bar>
+      <p-bar label="Breaker tripped" value="2ms" :percent="1" color="accent"></p-bar>
+    </p-bars>
+
+    <h4>Verdict</h4>
+    <p-kv :items="[
+      { key: 'Advantage', value: 'Minimal code change, deploy in 1 day, no infrastructure changes' },
+      { key: 'Cost', value: 'Threshold tuning needed per service, adds opossum dependency (~8KB)' },
+      { key: 'Decision', value: 'Adopted — lowest risk, fastest time to deploy' }
+    ]"></p-kv>
+  </p-tab>
+
+  <p-tab title="Approach B: Async Queue">
+    <h4>Overview</h4>
+    <p>Decouple the checkout flow entirely. Accept orders synchronously, then process inventory reservation + payment asynchronously via a message queue (BullMQ on Redis).</p>
+
+    <h4>Performance</h4>
+    <p-bars>
+      <p-bar label="Order acceptance" value="15ms" :percent="2" color="success"></p-bar>
+      <p-bar label="Async processing" value="850ms" :percent="9" color="accent"></p-bar>
+    </p-bars>
+
+    <p-collapse title="Infrastructure cost estimate">
+      <p-kv :items="[
+        { key: 'Redis', value: 'Existing cluster, no additional cost' },
+        { key: 'Worker pods', value: '3x t3.medium, ~$120/month' },
+        { key: 'Monitoring', value: 'BullMQ dashboard + Grafana queue depth alerts' },
+        { key: 'Migration', value: '~3 engineer-weeks including client SDK changes' }
+      ]"></p-kv>
+    </p-collapse>
+
+    <h4>Blocker</h4>
+    <p-kv :items="[
+      { key: 'Constraint', value: 'Client SDK assumes synchronous checkout — needs UX redesign for async flow' },
+      { key: 'Timeline', value: 'Estimated 3 weeks, conflicts with Q1 feature freeze' },
+      { key: 'Decision', value: 'Deferred to Q2 — correct long-term solution but too slow for immediate fix' }
+    ]"></p-kv>
+  </p-tab>
+
+  <p-tab title="Approach C: Service Mesh (Istio)">
+    <h4>Overview</h4>
+    <p>Deploy Istio service mesh with built-in circuit breaking, retry policies, and distributed tracing. Handles the problem at the infrastructure layer.</p>
+
+    <h4>Performance</h4>
+    <p-bars>
+      <p-bar label="Sidecar overhead" value="+3ms" :percent="4" color="warning"></p-bar>
+      <p-bar label="Circuit breaker" value="1ms" :percent="1" color="success"></p-bar>
+    </p-bars>
+
+    <p-collapse title="Migration scope">
+      <p-kv :items="[
+        { key: 'Pods affected', value: 'All 14 services need Envoy sidecar injection' },
+        { key: 'Config', value: 'DestinationRule + VirtualService per service pair' },
+        { key: 'Timeline', value: '6 engineer-weeks minimum' },
+        { key: 'Prerequisite', value: 'Kubernetes migration must complete first (currently on ECS)' }
+      ]"></p-kv>
+    </p-collapse>
+
+    <h4>Blocker</h4>
+    <p-kv :items="[
+      { key: 'Constraint', value: 'Platform team K8s migration scheduled for Q3' },
+      { key: 'Current state', value: 'Running on ECS — Istio requires Kubernetes' },
+      { key: 'Decision', value: 'Blocked — revisit after K8s migration completes' }
+    ]"></p-kv>
+  </p-tab>
+</p-tabs>
+
+<hr>
+
+<!-- ───── Edge Cases ───── -->
+
+<h2>Edge Cases</h2>
+
+<p>Failure modes beyond the primary cascade scenario. Handled cases reference their guard code; unhandled cases are flagged.</p>
+
+<p-collapse title="Edge case checklist">
+  <h4>Partial failure</h4>
+  <p>Inventory reserves 2 of 3 items, then times out on the third — <p-badge color="danger">Unhandled</p-badge> (reservation for the first 2 items is not released)</p>
+
+  <h4>Concurrent checkout</h4>
+  <p>Two users checkout the last item simultaneously — handled. <p-ref to="src-reserve-lock" label="inventory.ts:34"></p-ref> uses <code>SELECT FOR UPDATE SKIP LOCKED</code>:</p>
+  <p-source path="src/services/inventory.ts:34-38" lang="TypeScript" id="src-reserve-lock">
+    <pre><code>const stock = await db.query(
+  `SELECT * FROM stock_reservations
+   WHERE sku = $1 AND status = 'available'
+   FOR UPDATE SKIP LOCKED
+   LIMIT $2`, [sku, quantity]
+);</code></pre>
+  </p-source>
+
+  <h4>Circuit breaker flapping</h4>
+  <p>Service recovers briefly then fails again — handled. The half-open state in <p-ref to="src-breaker" label="order.ts:62"></p-ref> allows only 1 test request through before fully closing the breaker.</p>
+
+  <h4>Clock skew on deadline</h4>
+  <p>gRPC deadline computed on client clock, evaluated on server clock — handled. Deadlines use relative duration (<code>5000ms from now</code>), not absolute timestamps.</p>
+</p-collapse>
+
+<hr>
+
+<!-- ───── Test Coverage ───── -->
+
+<h2>Test Coverage</h2>
+
+<p>Test status by functional area. Critical gaps flagged in red.</p>
+
+<h4>Checkout flow</h4>
+<p-checklist>
+  <p-check-item checked>Valid cart produces order + payment intent — <code>it('creates order from valid cart')</code></p-check-item>
+  <p-check-item checked>Out-of-stock item returns 409 — <code>it('rejects checkout when item unavailable')</code></p-check-item>
+  <p-check-item checked>Invalid cart returns 400 — <code>it('validates cart structure')</code></p-check-item>
+  <p-check-item>Inventory timeout triggers circuit breaker fallback <p-badge color="danger">Missing</p-badge></p-check-item>
+  <p-check-item>Partial reservation rollback on timeout <p-badge color="danger">Missing</p-badge></p-check-item>
+</p-checklist>
+
+<h4>Circuit breaker</h4>
+<p-checklist>
+  <p-check-item checked>Breaker trips after threshold failures — <code>it('opens circuit after 5 failures')</code></p-check-item>
+  <p-check-item checked>Half-open state allows single test request — <code>it('sends probe in half-open state')</code></p-check-item>
+  <p-check-item>Breaker reset under sustained partial failure <p-badge color="danger">Missing</p-badge></p-check-item>
+</p-checklist>
+
+<p-collapse title="Circuit breaker test details">
+  <p-source path="tests/services/circuit-breaker.test.ts:12-30" lang="TypeScript" id="src-test-breaker">
+    <pre><code>describe('CircuitBreaker', () => {
+  it('opens circuit after 5 failures', async () => {
+    const mockFn = vi.fn().mockRejectedValue(new Error('timeout'));
+    const breaker = new CircuitBreaker(mockFn, { errorThreshold: 5 });
+
+    for (let i = 0; i &lt; 5; i++) {
+      await expect(breaker.fire()).rejects.toThrow('timeout');
+    }
+
+    // 6th call should fail immediately without calling mockFn
+    await expect(breaker.fire()).rejects.toThrow('circuit open');
+    expect(mockFn).toHaveBeenCalledTimes(5); // not 6
+  });
+
+  it('sends probe in half-open state', async () => {
+    // ... setup breaker in open state, advance timers past resetTimeout
+    vi.advanceTimersByTime(30000);
+    await breaker.fire(); // should call mockFn once
+    expect(mockFn).toHaveBeenCalledTimes(1);
+  });
+});</code></pre>
+  </p-source>
+</p-collapse>
+
+<h4>Migration safety</h4>
+<p-checklist>
+  <p-check-item checked>Non-blocking DDL validation — <code>it('rejects CREATE INDEX without CONCURRENTLY')</code></p-check-item>
+  <p-check-item>Advisory lock acquisition before DDL <p-badge color="danger">Missing</p-badge></p-check-item>
+</p-checklist>
+
+<hr>
+
+<!-- ───── Interactive Parameters ───── -->
+
+<h2>Interactive Parameters</h2>
+
+<p>Tune the circuit breaker and timeout thresholds below. Export when ready.</p>
+
+<p-params>
+  <p-param name="grpcTimeout" label="gRPC call timeout" type="range" :min="1000" :max="15000" :step="500" :value="5000" unit="ms"></p-param>
+  <p-param name="errorThreshold" label="Circuit breaker error threshold" type="range" :min="3" :max="20" :step="1" :value="5"></p-param>
+  <p-param name="resetTimeout" label="Circuit breaker reset timeout" type="range" :min="5" :max="120" :step="5" :value="30" unit="s"></p-param>
+  <p-param name="retryStrategy" label="Retry strategy" type="select" options="exponential, linear, none" value="exponential"></p-param>
+  <p-param name="healthCheckEnabled" label="Dependency health in readiness probe" type="toggle" :value="true"></p-param>
+</p-params>
+
+<p-copy :content="'grpcTimeout=' + params.grpcTimeout + '\nerrorThreshold=' + params.errorThreshold + '\nresetTimeout=' + params.resetTimeout + '\nretryStrategy=' + params.retryStrategy + '\nhealthCheckEnabled=' + params.healthCheckEnabled" label="Copy as config"></p-copy>
+
+<hr>
+
+<!-- ───── Inline Term Definitions ───── -->
+
+<h2>Inline Term Definitions</h2>
+
+<p>Hover over dotted terms for explanations. First occurrences are marked with a dot.</p>
+
+<p>When the <p-term word="circuit breaker" def="A stability pattern that monitors call failures and short-circuits requests when a threshold is exceeded, preventing cascade failures. Named after electrical circuit breakers." first>circuit breaker</p-term> detected sustained failures from the <p-term word="inventory service" def="Microservice responsible for stock management, reservations, and warehouse sync. Backed by PostgreSQL with row-level locking." first>inventory service</p-term>, it entered the <p-term word="half-open state" def="A circuit breaker state where a single test request is allowed through to check if the downstream service has recovered. If it succeeds, the breaker closes; if it fails, the breaker reopens." first>half-open state</p-term> and sent a probe request to test recovery. Once the <p-term word="inventory service">inventory service</p-term> responded successfully, the breaker closed and normal traffic resumed.</p>
+
+<hr>
+
+<!-- ───── Concept Contrast ───── -->
+
+<h2>Concept Contrast</h2>
+
+<p>The same word means different things depending on context — not a value judgment, just a semantic distinction.</p>
+
+<p-contrast word="timeout" desc="means different things at different layers">
+  <template #left>
+    <div class="context">At the gRPC layer</div>
+    <div class="meaning">A <em>deadline</em> — the maximum wall-clock time the client will wait for a response. After the deadline, the call is cancelled and returns <code>DEADLINE_EXCEEDED</code>. The server may still be processing.</div>
+  </template>
+  <template #right>
+    <div class="context">At the circuit breaker layer</div>
+    <div class="meaning">A <em>failure signal</em> — one data point feeding the error threshold counter. After enough timeouts, the breaker trips and stops sending requests entirely. The goal is to protect the caller, not the callee.</div>
+  </template>
+</p-contrast>
+
+<hr>
+
+<!-- ───── Analogy ───── -->
+
+<h2>Analogy</h2>
+
+<p>Explaining the circuit breaker pattern through a familiar concept.</p>
+
+<p-analogy
+  source="Electrical fuse box"
+  source-desc="When a short circuit occurs in one room, the fuse for that room blows — cutting power to that room only. The rest of the house keeps running. After fixing the short, you reset the fuse."
+  target="Software circuit breaker"
+  target-desc="When the inventory service fails, the circuit breaker for that service trips — returning a fallback immediately instead of waiting. Other services keep running. After recovery, the breaker resets automatically."
+  because="Both isolate a failure to the affected circuit, preventing damage from spreading to the entire system."
+></p-analogy>
+
+<hr>
+
+<!-- ───── Decision Tree ───── -->
+
+<h2>Decision Tree</h2>
+
+<p>How the order service should handle an inventory call failure — the branching logic after adding the circuit breaker.</p>
+
+<p-branch root="Order service receives checkout request, calls inventory reserve()">
+  <p-branch-item cond="Circuit breaker OPEN" status="danger" outcome="Return 503 with retry-after header, skip inventory call entirely">Breaker tripped due to sustained failures</p-branch-item>
+  <p-branch-item cond="Circuit breaker CLOSED" outcome="Forward request to inventory service">Normal operation, send gRPC call with 5s deadline
+    <template #children>
+      <p-branch-item cond="Timeout (>5s)" status="danger" outcome="Increment failure counter, return 504 to client">gRPC DEADLINE_EXCEEDED — inventory did not respond in time</p-branch-item>
+      <p-branch-item cond="Out of stock" status="danger" outcome="Return 409 Conflict to client">Inventory responded but stock unavailable</p-branch-item>
+      <p-branch-item cond="Reserved" status="success" outcome="Proceed to payment intent creation">Stock reserved, continue checkout flow</p-branch-item>
+    </template>
+  </p-branch-item>
+</p-branch>
+
+<hr>
+
+<!-- ───── Myth Correction ───── -->
+
+<h2>Myth Correction</h2>
+
+<p-myth>
+  <template #myth>Adding retries to failed requests will fix timeout issues — just keep trying until the service recovers.</template>
+  <template #truth>Retries without backoff and circuit breaking make cascade failures <strong>worse</strong>, not better. Each retry adds another request to an already overloaded service. If 100 clients each retry 3 times, the failing service receives 400 requests instead of 100 — accelerating the collapse. Retries are only safe when combined with exponential backoff, jitter, and a circuit breaker that stops retrying once the failure is systemic.</template>
+</p-myth>
+
+<hr>
+
+<p-collapse title="What about the orders that failed during the outage?" borderless open>
+  <p>1,247 orders received 502 errors during the 23-minute window. Customers saw a "temporarily unavailable" message. No partial orders were created — the failure occurred before payment intent creation, so no charges were made. Customers can simply retry checkout.</p>
+</p-collapse>
+
+<p-collapse title="Could this happen again with a different service?" borderless>
+  <p>Yes — currently only the inventory service has a circuit breaker. The fix in <p-ref to="src-breaker" label="order.ts:62"></p-ref> is service-specific. The follow-up task is to wrap all cross-service calls in the circuit breaker factory:</p>
+  <p-source path="src/config/circuit-breaker.ts:5-12" lang="TypeScript" id="src-cb-factory">
+    <pre><code>export function withBreaker&lt;T&gt;(
+  name: string,
+  fn: (...args: any[]) => Promise&lt;T&gt;,
+  opts?: Partial&lt;BreakerOptions&gt;
+): (...args: any[]) => Promise&lt;T&gt; {
+  const breaker = new CircuitBreaker(fn, {
+    timeout: opts?.timeout ?? 5000,
+    errorThresholdPercentage: opts?.errorThreshold ?? 50,
+    resetTimeout: opts?.resetTimeout ?? 30000,
+  });
+  breaker.on('open', () => metrics.increment(`circuit.${name}.open`));
+  return (...args) => breaker.fire(...args);
+}</code></pre>
+  </p-source>
+</p-collapse>
+
+<p-callout type="warning" icon="!">
+  <p><strong>Deployment coordination:</strong> The circuit breaker config must be deployed to all order service pods simultaneously. A rolling deploy with mixed versions will cause inconsistent behavior — some pods trip the breaker while others keep retrying.</p>
+</p-callout>
+
+<hr>
+
+<!-- ───── Evaluation Tracks ───── -->
+
+<h2>Evaluation Tracks</h2>
+
+<p>Multi-dimensional assessment of the proposed fix. Each track is an independent review dimension, not a sequential step.</p>
+
+<p-tracks>
+  <p-track title="Reliability" flag="passed">
+    Circuit breaker prevents cascade failures. gRPC deadlines ensure no request hangs indefinitely. Graceful degradation returns 503 within 2ms when breaker is open.
+  </p-track>
+  <p-track title="Performance" flag="passed" desc="Healthy path adds <1ms overhead (breaker check). Failure path improves from 30s timeout to 2ms circuit-open response."></p-track>
+  <p-track title="Observability" flag="polish">
+    <p-finding title="Missing circuit breaker metrics">
+      Breaker state transitions (open/close/half-open) are not emitted to Datadog yet.
+      <template #detail>
+        <p>The <code>withBreaker</code> factory has metric hooks but the Datadog exporter is not wired up. Add <code>breaker.on('open', ...)</code> callbacks in the factory.</p>
+      </template>
+    </p-finding>
+  </p-track>
+  <p-track title="Migration Safety" flag="blocked">
+    Schema migration tooling still allows blocking DDL. Until the linter enforces <code>CONCURRENTLY</code>, the root trigger can recur.
+  </p-track>
+  <p-track title="Blast Radius" flag="at-risk">
+    Circuit breaker only covers the inventory call. Payment service and warehouse API calls are still unprotected.
+  </p-track>
+</p-tracks>
+
+<hr>
+
+<!-- ───── Evidence ───── -->
+
+<h2>Evidence</h2>
+
+<p>The root cause conclusion is supported by three independent data sources.</p>
+
+<p-evidence>
+  <template #conclusion>The cascade failure was caused by a missing gRPC deadline on the inventory client, triggered by a <code>CREATE INDEX</code> without <code>CONCURRENTLY</code> that held a <code>SHARE</code> lock on the <code>stock_reservations</code> table for 4 minutes.</template>
+  <p-evidence-item title="PostgreSQL lock monitor">
+    <code>pg_stat_activity</code> showed 100 queries in <code>wait_event_type = Lock</code> state on the <code>stock_reservations</code> table during the incident window. Lock holder was the migration process (PID 48291).
+  </p-evidence-item>
+  <p-evidence-item title="gRPC client metrics">
+    Datadog shows <code>grpc.client.duration</code> for <code>inventory.Reserve</code> spiking to 30,000ms (the default gRPC deadline: infinity, capped by the HTTP/2 idle timeout). No <code>DEADLINE_EXCEEDED</code> errors because no deadline was set.
+  </p-evidence-item>
+  <p-evidence-item title="API Gateway access logs">
+    CloudWatch logs confirm 1,247 requests to <code>POST /api/orders</code> returned 502 between 14:23:01 and 14:46:18 UTC. Zero 502s in the preceding 24 hours.
+  </p-evidence-item>
+</p-evidence>

@@ -1,0 +1,13 @@
+{
+  "name": "prism",
+  "displayName": "Prism",
+  "version": "0.2.0",
+  "description": "Structured documents for AI agents — 45 production-ready components with a coherent visual system. Decisions, architecture flows, collapsible references, metrics, and charts rendered as self-contained HTML.",
+  "author": {
+    "name": "tommy0103",
+    "url": "https://github.com/tommy0103"
+  },
+  "repository": "https://github.com/tommy0103/prism",
+  "license": "MIT",
+  "keywords": ["documents", "html", "components", "visualization", "structured-output"]
+}

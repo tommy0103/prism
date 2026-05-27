@@ -7,13 +7,20 @@
 
 # Prism
 
-### A semantic document DSL for AI agents.
+### Structured documents for AI agents. Beautiful output for humans.
 
-Teach agents to write with hierarchy, evidence, and structure, then render it as self-contained HTML.
+Agents write with purpose-built components — decisions, code references, flows, metrics.
+Prism renders it all as a single, self-contained HTML file with a coherent visual system.
+**No CSS. No design decisions. Just clear, scannable documents.**
 
-<p align="center">
-  <a href="https://tommy0103.github.io/prism/references/showcase-readme.html">Open README in prism</a>
+<p>
+  <a href="https://tommy0103.github.io/prism/examples/showcase-en.html"><b>→ See Live showcase</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://tommy0103.github.io/prism/examples/showcase-readme.html">This README in Prism</a>
+  &nbsp;·&nbsp;
+  <a href="https://tommy0103.github.io/prism/examples/showcase.html">中文展示</a>
 </p>
+
 
 [![stars](https://img.shields.io/github/stars/tommy0103/prism?style=flat-square)](https://github.com/tommy0103/prism/stargazers)
 [![version](https://img.shields.io/github/v/tag/tommy0103/prism?label=version&style=flat-square)](https://github.com/tommy0103/prism/releases)
@@ -25,31 +32,28 @@ Teach agents to write with hierarchy, evidence, and structure, then render it as
 <table>
   <tr>
     <td width="50%" align="center">
+      <strong>← What an agent writes with Prism</strong>
+      <br>
       <img src=".github/assets/showcase-hero.png" alt="Prism showcase">
       <br>
-      <i><b>This is what an agent writes</b>
-      <br>— with hierarchy, evidence, and structure built in.</i>
+      <sub>Hierarchy, evidence, and structure — built into the DSL.</sub>
     </td>
     <td width="50%" align="center">
+      <strong>What an agent writes with markdown →</strong>
+      <br>
       <img src=".github/assets/before-after-comparison.png" alt="Same content, different vocabulary">
       <br>
-      <i>What an agent writes when it only has markdown.</i>
+      <sub>Same content. No visual vocabulary.</sub>
     </td>
   </tr>
 </table>
 
-<p align="center"><i>Same content, different vocabulary.</i></p>
-
-<p align="center">
-  <a href="https://tommy0103.github.io/prism/references/showcase.html"><b>→ Open the live showcase</b></a>
-  &nbsp;·&nbsp;
-  <a href="https://github.com/tommy0103/prism/blob/main/references/showcase.html">View source</a>
-</p>
-
-
 ---
 
 ## Why Prism
+
+*(This README is also a Prism document — [open it rendered with Prism](https://tommy0103.github.io/prism/references/showcase-readme.html) to see what an agent-built page looks like.)*
+
 
 ### Pillar 01 · The visual layer — stop reinventing CSS
 
@@ -71,17 +75,43 @@ nothing breaks. Prism components render with semantic class names you can
 override, and standard HTML inside a template stays standard HTML. Bring as
 much or as little of Prism as you want. **You can see [this](#customization) for more details.**
 
-## Quick start
+## Install and Update
 
-### Install
+**Interactive**
 
 ```bash
-# Install to current project
 npx skills add tommy0103/prism
-
-# Or install globally for all projects
-npx skills add tommy0103/prism --global
 ```
+
+**Claude Code**
+
+```bash
+npx skills add tommy0103/prism -a claude-code -g -y
+```
+
+**Codex**
+
+```bash
+npx skills add tommy0103/prism -a codex -g -y
+```
+
+**Claude Code plugin marketplace** (single-skill entries require Claude Code v2.1.143+)
+
+```bash
+# Register this repo as a plugin source
+/plugin marketplace add tommy0103/prism
+
+# Then install
+/plugin install prism@prism
+```
+
+**Update**
+
+```bash
+npx skills update -g -y
+```
+
+Marketplace installs use `claude plugin update <skill>`. 
 
 No build step needed — the runtime is pre-built. The agent discovers the skill via `SKILL.md` and uses it automatically when you ask for structured documents.
 
@@ -300,6 +330,10 @@ prism/
 ```
 
 </details>
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tommy0103/prism&type=date&legend=top-left)](https://www.star-history.com/#tommy0103/prism&type=date&legend=top-left)
 
 ---
 

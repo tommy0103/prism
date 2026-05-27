@@ -634,6 +634,7 @@
 .prism-tabs-header {
   display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .prism-tabs-btn {
@@ -734,7 +735,5 @@
 }
 
 .prism-file-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
 }
