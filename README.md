@@ -175,7 +175,19 @@ open index.html
 git clone https://github.com/tommy0103/prism.git
 cd prism
 npx http-server . -p 3000
-# Open http://localhost:3000/references/showcase.html
+# Open http://localhost:3000/examples/showcase-en.html
+```
+
+### Verify
+
+Every Prism document embeds a SHA-256 hash of the runtime and a
+[Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+that blocks all network access. To verify a `.html` file was built with an
+unmodified Prism runtime:
+
+```bash
+node prism/build.js --verify file.html
+# ✓ Prism runtime integrity verified (sha256-b0f58b7036ebec83)
 ```
 
 ## What's in the box
